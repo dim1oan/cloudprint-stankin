@@ -82,12 +82,27 @@ def run_tests():
     assert term2["status"] == "Замятие E-04", "Терминал должен перейти в статус Замятие E-04"
     print("✔ Статус терминала переведен в «Замятие E-04».")
 
-    # 6. Проверка БАГА 1: Автоматическое начисление 100% компенсации диспетчером
-    # Студент Иванов до компенсации
-    user_before = database.get_student_user(1)
-    bal_before = user_before["balance_rub"]
+    # 6. Проверка ПРАВИЛА: При переводе заказа на 2-й корпус компенсация НЕ начисляется
+    user_before_reroute = database.get_student_user(1)
+    bal_before_reroute = user_before_reroute["balance_rub"]
 
-    # Диспетчер нажимает «Начислить компенсацию (100%)» БЕЗ ручного ввода суммы
+    res_reroute = client.post(f"/api/tickets/{ticket_id}/reroute", json={
+        "dispatcher_name": "Цырулев А. А."
+    })
+    assert res_reroute.status_code == 200, f"Ошибка reroute: {res_reroute.text}"
+    rerouted_ticket = res_reroute.json()["ticket"]
+    assert rerouted_ticket["terminal_id"] == 1, "Заказ должен перевестись на терминал №1 (Старый корпус)"
+    assert rerouted_ticket["compensation_rub"] == 0.0, "При переводе компенсация НЕ должна начисляться!"
+
+    user_after_reroute = database.get_student_user(1)
+    assert user_after_reroute["balance_rub"] == bal_before_reroute, "Баланс студента НЕ должен меняться при переводе заказа во 2-й корпус"
+    
+    active_ord = client.get("/api/client/active-order?user_id=1").json()["order"]
+    assert active_ord["terminal_id"] == 1, "Активный заказ студента должен иметь terminal_id = 1"
+    assert active_ord["pickup_code"] is not None, "Должен быть сгенерирован новый код получения"
+    print(f"✔ Заказ успешно перенаправлен во 2-й корпус без начисления компенсации (Баланс остался {bal_before_reroute} ₽, Пин: {active_ord['pickup_code']}).")
+
+    # 7. Проверка возврата средств (Компенсация 100% при отмене печати)
     res_comp = client.post(f"/api/tickets/{ticket_id}/compensate", json={
         "dispatcher_name": "Цырулев А. А."
     })
@@ -95,22 +110,9 @@ def run_tests():
     comp_json = res_comp.json()
     assert comp_json["compensation_added"] == 60.0, f"Должно начислиться ровно 100% (60.0 руб.), а начислилось {comp_json.get('compensation_added')}"
     
-    user_after = database.get_student_user(1)
-    assert user_after["balance_rub"] == bal_before + 60.0, "Баланс студента должен увеличиться ровно на 60 руб."
-    print(f"✔ БАГ 1 (100% компенсация без ручного ввода) решен: начислено ровно {comp_json['compensation_added']} ₽. Баланс: {bal_before} -> {user_after['balance_rub']} ₽.")
-
-    # 7. Проверка перевода заказа на резервный терминал
-    res_reroute = client.post(f"/api/tickets/{ticket_id}/reroute", json={
-        "dispatcher_name": "Цырулев А. А."
-    })
-    assert res_reroute.status_code == 200, f"Ошибка reroute: {res_reroute.text}"
-    rerouted_ticket = res_reroute.json()["ticket"]
-    assert rerouted_ticket["terminal_id"] == 1, "Заказ должен перевестись на терминал №1 (Старый корпус)"
-    
-    active_ord = client.get("/api/client/active-order?user_id=1").json()["order"]
-    assert active_ord["terminal_id"] == 1, "Активный заказ студента должен иметь terminal_id = 1"
-    assert active_ord["pickup_code"] is not None, "Должен быть сгенерирован новый код получения"
-    print(f"✔ Заказ успешно перенаправлен на противоположный корпус (Терминал ID={active_ord['terminal_id']}). Новый пин: {active_ord['pickup_code']}.")
+    user_after_comp = database.get_student_user(1)
+    assert user_after_comp["balance_rub"] == bal_before_reroute + 60.0, "Баланс студента должен увеличиться ровно на 60 руб. при возврате средств"
+    print(f"✔ Возврат средств (100% компенсация): начислено ровно {comp_json['compensation_added']} ₽. Баланс: {bal_before_reroute} -> {user_after_comp['balance_rub']} ₽.")
 
     # 8. Сброс БД обратно к исходному демо-состоянию для чистого старта
     database.init_db(force_reseed=True)

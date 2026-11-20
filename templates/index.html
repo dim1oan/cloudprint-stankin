@@ -332,25 +332,19 @@
             </div>
           </div>
 
-          <!-- ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ ДИСПЕТЧЕРА С АВТОМАТИЧЕСКИМ РАСЧЕТОМ КОМПЕНСАЦИИ (БАГ 1) -->
+          <!-- ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ ДИСПЕТЧЕРА: ЛИБО ПЕРЕВОД ПЕЧАТИ, ЛИБО ВОЗВРАТ СРЕДСТВ -->
           <div id="dispatcherActionsBar" class="p-2.5 bg-stankin-deep text-white border-b border-slate-700 flex flex-wrap items-center gap-2">
             
-            <!-- БАГ 1: КНОПКА «НАЧИСЛИТЬ КОМПЕНСАЦИЮ (100%)» БЕЗ РУЧНОГО ВВОДА СУММЫ -->
-            <button onclick="triggerCompensate100()" id="btnCompensate100" class="bg-gradient-to-r from-stankin-burgundy to-red-600 hover:from-red-600 hover:to-red-700 active:scale-[0.98] text-white text-xs font-extrabold px-3.5 py-1.5 rounded-xl shadow-md transition-all flex items-center space-x-1.5 border border-red-300/40">
+            <!-- ДЕЙСТВИЕ 1: ПЕРЕВОД ЗАКАЗА НА 2-Й КОРПУС (ПЕЧАТЬ СОСТОИТСЯ, КОМПЕНСАЦИЯ НЕ НАЧИСЛЯЕТСЯ) -->
+            <button onclick="rerouteOrder()" class="bg-gradient-to-r from-stankin-lightNavy to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-[0.98] text-white text-xs font-extrabold px-3.5 py-1.5 rounded-xl shadow-md transition-all flex items-center space-x-1.5 border border-blue-400/40">
+              <i class="fa-solid fa-share-nodes text-cyan-200"></i>
+              <span>🔄 Перевести на 2-й корпус (печать без компенсации)</span>
+            </button>
+
+            <!-- ДЕЙСТВИЕ 2: 100% ВОЗВРАТ СРЕДСТВ (ЕСЛИ ПЕЧАТЬ ОТМЕНЯЕТСЯ) -->
+            <button onclick="triggerCompensate100()" id="btnCompensate100" class="bg-stankin-burgundy hover:bg-red-700 active:scale-[0.98] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 border border-red-400/30">
               <i class="fa-solid fa-coins text-amber-300"></i>
-              <span>Начислить компенсацию (100% — <span id="actionBarCompCost">225.00 ₽</span>)</span>
-            </button>
-
-            <!-- КОМПЛЕКСНОЕ ДЕЙСТВИЕ: НАЧИСЛИТЬ 100% И ПЕРЕВЕСТИ НА 2-Й КОРПУС -->
-            <button onclick="triggerCompensateAndReroute()" class="bg-gradient-to-r from-amber-500 via-orange-600 to-red-600 hover:from-amber-400 hover:to-red-500 active:scale-[0.98] text-white text-xs font-extrabold px-3.5 py-1.5 rounded-xl shadow-md transition-all flex items-center space-x-1.5 border border-amber-300/40">
-              <i class="fa-solid fa-bolt text-yellow-200"></i>
-              <span>Начислить 100% и перевести на 2-й корпус</span>
-            </button>
-
-            <!-- ТОЛЬКО ПЕРЕВОД НА РЕЗЕРВНЫЙ ТЕРМИНАЛ -->
-            <button onclick="rerouteOrder()" class="bg-stankin-lightNavy hover:bg-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all flex items-center space-x-1">
-              <i class="fa-solid fa-share-nodes"></i>
-              <span>Только перевод</span>
+              <span>💰 Вернуть средства (100% — <span id="actionBarCompCost">225.00 ₽</span>)</span>
             </button>
 
             <!-- ВЫЗОВ ДЕЖУРНОГО СПЕЦИАЛИСТА ПЛОЩАДКИ -->
@@ -497,7 +491,7 @@
           <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
             <div class="font-bold text-stankin-navy">Оборудование и параметры печати:</div>
             <div>• Терминал №1: Старый корпус (STANKIN-OLD-01), холл 1 этажа.</div>
-            <div>• Терминал №2: Новый корпус (STANKIN-NEW-01), коворкинг 2 этажа.</div>
+            <div>• Терминал №2: Новый корпус (STANKIN-NEW-01), холл 1 этажа (у поста с охраной).</div>
             <div>• Лазерные МФУ А4, тонер-картриджи Kyocera TK-1150 (3000 стр., k=1).</div>
           </div>
         </div>
@@ -1088,7 +1082,7 @@
           const data = await res.json();
           renderActiveTicket(data.ticket);
           fetchDashboardData();
-          showToast('Заказ переведен на 2-й корпус! Выдан новый код.', 'success');
+          showToast('🔄 Заказ переведен на 2-й корпус без компенсации (печать состоится)!', 'success');
         }
       } catch (err) {
         showToast('Ошибка при перенаправлении заказа', 'error');
@@ -1157,8 +1151,8 @@
 
     function insertTemplate(idx) {
       const input = document.getElementById('messageInput');
-      if (idx === 1) input.value = "Здравствуйте! Ваш заказ успешно переведен на Терминал №2 (Новый корпус). Вы можете забрать его по коду получения.";
-      if (idx === 2) input.value = "Здравствуйте! Средства за печать возвращены бонусными баллами на ваш баланс. Приносим извинения за сбой!";
+      if (idx === 1) input.value = "Здравствуйте! Ваш заказ успешно переведен на Терминал №2 (Новый корпус). Вы можете забрать его по коду получения без доплат.";
+      if (idx === 2) input.value = "Здравствуйте! Произведен 100% возврат средств за печать на ваш бонусный баланс. Печать отменена.";
       if (idx === 3) input.value = "Дежурный специалист площадки направлен к МФУ для устранения замятия бумаги.";
       input.focus();
     }

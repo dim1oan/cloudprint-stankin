@@ -9,6 +9,7 @@
 """
 
 import os
+from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
@@ -25,19 +26,21 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 INDEX_HTML_PATH = os.path.join(TEMPLATES_DIR, "index.html")
 CLIENT_HTML_PATH = os.path.join(TEMPLATES_DIR, "client.html")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Инициализация базы данных при старте приложения
+    database.init_db()
+    yield
+
 app = FastAPI(
     title="CloudPrint СТАНКИН — Панель диспетчера и студенческий сервис",
     description="Комплекс диспетчеризации, мониторинга МФУ и мобильного веб-приложения студента",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 # Шаблоны Jinja2
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
-
-# Инициализация базы данных при старте приложения
-@app.on_event("startup")
-def startup_event():
-    database.init_db()
 
 # --- МОДЕЛИ ЗАПРОСОВ (PYDANTIC) ---
 
@@ -300,21 +303,18 @@ async def api_reroute(ticket_id: int, req: ActionRequest):
 @app.post("/api/tickets/{ticket_id}/compensate-and-reroute")
 async def api_compensate_and_reroute(ticket_id: int, req: CompensateAndRerouteRequest):
     """
-    Комплексная кнопка диспетчера:
-    «Начислить бонусы и перевести заказ на 2-й корпус» в одно действие!
+    Регламент: при переводе на 2-й корпус компенсация не начисляется,
+    так как заказ будет распечатан на резервном оборудовании по новому коду.
     """
-    ticket = database.compensate_and_reroute(
+    ticket = database.reroute_order_to_campus(
         ticket_id=ticket_id,
-        amount_rub=req.amount_rub,
         dispatcher_name=req.dispatcher_name
     )
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
-    comp_added = ticket.get("last_compensation_added", req.amount_rub or ticket.get("price_rub") or ticket["compensation_rub"])
     return {
         "success": True,
-        "message": f"Бонусы ({comp_added:.2f} ₽) начислены и заказ переведен на 2-й корпус с выдачей нового цифрового кода!",
-        "compensation_added": comp_added,
+        "message": "Заказ переведен на 2-й корпус (компенсация не начисляется, так как печать состоится)",
         "ticket": ticket
     }
 

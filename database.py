@@ -178,7 +178,7 @@ def seed_demo_data(conn):
         ),
         (
             2, "STANKIN-NEW-01", "Терминал №2 (Новый корпус)", "Новый корпус",
-            "Новый корпус, 2 этаж (коворкинг Инжинирингового центра)", "Онлайн",
+            "Новый корпус, холл 1 этажа (у поста с охраной)", "Онлайн",
             460, 500, 410, 8410, "TK-1150", 3000,
             "192.168.10.22", "2026-11-20 08:30:00", now_str
         )
@@ -683,17 +683,21 @@ def compensate_student(ticket_id: int, amount_rub: float = None, dispatcher_name
     WHERE id = ?
     """, (new_comp_total, now_str, ticket_id))
 
+    # Если привязан заказ, аннулируем его выдачу в связи со 100% возвратом средств
+    if ticket["order_id"]:
+        cursor.execute("UPDATE orders SET status = 'Отменен (Возврат)', pickup_code = NULL WHERE id = ?", (ticket["order_id"],))
+
     order_info = ticket["order_code"] or "заказа"
     # Записываем транзакцию
     cursor.execute("""
     INSERT INTO transactions (user_id, ticket_id, amount_rub, transaction_type, description, created_at)
     VALUES (?, ?, ?, 'Компенсация', ?, ?)
-    """, (user_id, ticket_id, amount_rub, f"100% компенсация за сбой печати ({order_info}, диспетчер {dispatcher_name})", now_str))
+    """, (user_id, ticket_id, amount_rub, f"100% возврат средств за отмену печати ({order_info}, диспетчер {dispatcher_name})", now_str))
 
     # Добавляем сервисное сообщение в чат
     system_msg = (
-        f"💰 Диспетчер {dispatcher_name} одобрил 100% компенсацию стоимости заказа ({amount_rub:.2f} ₽). "
-        f"Средства зачислены на бонусный счет студента. Актуальный баланс: {new_balance:.2f} руб."
+        f"💰 Диспетчер {dispatcher_name} оформил 100% возврат средств за печать ({amount_rub:.2f} ₽). "
+        f"Средства зачислены на бонусный счет студента. Печать заказа отменена. Актуальный баланс: {new_balance:.2f} руб."
     )
     cursor.execute("""
     INSERT INTO ticket_messages (ticket_id, sender_type, sender_name, message, created_at)
@@ -777,8 +781,8 @@ def reroute_order_to_campus(ticket_id: int, dispatcher_name: str = "Цыруле
         f"🔄 Заказ успешно перенаправлен на резервный терминал:\n"
         f"📍 Площадка: {target_term['name']} ({target_term['location']})\n"
         f"🔑 ВАШ НОВЫЙ ЦИФРОВОЙ КОД ПОЛУЧЕНИЯ: 【 {pickup_code} 】\n"
-        f"ℹ️ Подойдите к терминалу в {target_term['campus']}е, нажмите кнопку «Получить по коду» "
-        f"и введите указанный 6-значный пин-код. Срок действия кода — 24 часа."
+        f"ℹ️ Распечатка будет получена на резервном МФУ по новому коду без доплат (срок действия кода — 24 часа). "
+        f"Компенсация не начисляется, так как печать будет выполнена в полном объеме."
     )
     cursor.execute("""
     INSERT INTO ticket_messages (ticket_id, sender_type, sender_name, message, created_at)
@@ -1159,114 +1163,10 @@ def student_send_message(ticket_id: int, user_id: int = 1, message: str = ""):
 
 def compensate_and_reroute(ticket_id: int, amount_rub: float = None, dispatcher_name: str = "Цырулев А. А."):
     """
-    Комплексное действие диспетчера:
-    «Начислить бонусы и перевести заказ на 2-й корпус»:
-    1. Начисляет компенсацию на счет студента;
-    2. БАГ №1: Находит активный заказ студента и меняет его terminal_id на противоположный;
-    3. Генерирует новый 6-значный пин-код выдачи;
-    4. Перенаправляет заказ на резервный терминал во 2-м корпусе;
-    5. Отправляет подробное комбинированное уведомление студенту в чат.
+    Регламент: при переводе заказа на 2-й корпус компенсация не начисляется,
+    так как печать будет выполнена на резервном оборудовании.
     """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute("""
-    SELECT t.id, t.user_id, t.order_id, t.terminal_id, t.compensation_rub,
-           o.price_rub, o.page_count, o.order_code, o.terminal_id as order_term_id
-    FROM tickets t
-    LEFT JOIN orders o ON t.order_id = o.id
-    WHERE t.id = ?
-    """, (ticket_id,))
-    ticket_row = cursor.fetchone()
-    if not ticket_row:
-        conn.close()
-        return None
-
-    user_id = ticket_row["user_id"]
-    order_id = ticket_row["order_id"]
-    current_term_id = ticket_row["order_term_id"] or ticket_row["terminal_id"]
-
-    # БАГ №1: Если order_id не был привязан к тикету, находим последний заказ студента
-    if not order_id:
-        cursor.execute("""
-        SELECT id, order_code, price_rub, terminal_id FROM orders 
-        WHERE user_id = ? 
-        ORDER BY id DESC LIMIT 1
-        """, (user_id,))
-        last_order = cursor.fetchone()
-        if last_order:
-            order_id = last_order["id"]
-            current_term_id = last_order["terminal_id"]
-            if not ticket_row["price_rub"]:
-                amount_rub = float(last_order["price_rub"])
-
-    # Определяем сумму компенсации
-    if amount_rub is None or amount_rub <= 0:
-        amount_rub = float(ticket_row["price_rub"]) if ticket_row["price_rub"] else 60.0
-
-    # 1. Пополняем баланс студента
-    cursor.execute("UPDATE users SET balance_rub = balance_rub + ? WHERE id = ?", (amount_rub, user_id))
-    cursor.execute("SELECT balance_rub FROM users WHERE id = ?", (user_id,))
-    new_balance = cursor.fetchone()["balance_rub"]
-
-    # 2. Фиксируем компенсацию в тикете
-    new_comp_total = ticket_row["compensation_rub"] + amount_rub
-
-    # 3. Запись транзакции
-    cursor.execute("""
-    INSERT INTO transactions (user_id, ticket_id, amount_rub, transaction_type, description, created_at)
-    VALUES (?, ?, ?, 'Компенсация', ?, ?)
-    """, (user_id, ticket_id, amount_rub, f"Комплексная компенсация за сбой печати (тикет #{ticket_id}, диспетчер {dispatcher_name})", now_str))
-
-    # 4. Находим противоположный терминал во 2-м корпусе
-    cursor.execute("SELECT id, name, campus, location, code FROM terminals WHERE id != ? LIMIT 1", (current_term_id,))
-    target_term = cursor.fetchone()
-    if not target_term:
-        cursor.execute("SELECT id, name, campus, location, code FROM terminals LIMIT 1")
-        target_term = cursor.fetchone()
-
-    # 5. Генерируем новый 6-значный пин-код вида XXX-XXX
-    p1 = random.randint(100, 999)
-    p2 = random.randint(100, 999)
-    pickup_code = f"{p1}-{p2}"
-
-    # БАГ №1: Обновляем terminal_id на противоположный и статус заказа на 'Перенаправлен'
-    if order_id:
-        cursor.execute("""
-        UPDATE orders 
-        SET terminal_id = ?, status = 'Перенаправлен', pickup_code = ?
-        WHERE id = ?
-        """, (target_term["id"], pickup_code, order_id))
-
-    # Обновляем терминал и order_id в тикете
-    cursor.execute("""
-    UPDATE tickets 
-    SET terminal_id = ?, order_id = ?, compensation_rub = ?, updated_at = ?
-    WHERE id = ?
-    """, (target_term["id"], order_id, new_comp_total, now_str, ticket_id))
-
-    # 6. Добавляем объединенное сообщение диспетчера
-    combined_msg = (
-        f"⚡ Диспетчер {dispatcher_name} применил комплексное решение инцидента:\n"
-        f"💰 Начислена компенсация в размере {amount_rub:.2f} баллов (рублей) на ваш счет. Текущий баланс: {new_balance:.2f} ₽.\n"
-        f"🔄 Заказ успешно перенаправлен на {target_term['name']} ({target_term['location']}).\n"
-        f"🔑 ВАШ НОВЫЙ КОД ПОЛУЧЕНИЯ: 【 {pickup_code} 】\n"
-        f"Подойдите к терминалу в {target_term['campus']}е и введите данный цифровой номер на экране для распечатки."
-    )
-    cursor.execute("""
-    INSERT INTO ticket_messages (ticket_id, sender_type, sender_name, message, created_at)
-    VALUES (?, 'dispatcher', ?, ?, ?)
-    """, (ticket_id, f"{dispatcher_name} (Диспетчер)", combined_msg, now_str))
-
-    cursor.execute("UPDATE tickets SET updated_at = ? WHERE id = ?", (now_str, ticket_id))
-    conn.commit()
-    conn.close()
-
-    details = get_ticket_details(ticket_id)
-    if details:
-        details["last_compensation_added"] = amount_rub
-    return details
+    return reroute_order_to_campus(ticket_id=ticket_id, dispatcher_name=dispatcher_name)
 
 def get_student_active_order(user_id: int = 1):
     """

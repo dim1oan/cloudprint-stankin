@@ -263,7 +263,7 @@
                     <span class="text-xs font-bold text-slate-800">Новый корпус</span>
                     <span id="termStatusBadge2" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Онлайн</span>
                   </div>
-                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №2 • Коворкинг 2 этажа</div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №2 • Холл 1 этажа (у поста с охраной)</div>
                 </div>
               </label>
             </div>
@@ -820,13 +820,16 @@
       }
 
       container.innerHTML = orders.map(o => {
+        const isCancelled = o.order_status === 'Отменен (Возврат)';
         const isCompleted = o.order_status === 'Завершен';
         const isError = o.order_status === 'Ошибка печати';
         const isRerouted = o.order_status === 'Перенаправлен';
         const isReady = o.order_status === 'Готов к выдаче' || o.order_status === 'В очереди';
 
         let badgeHtml = '';
-        if (isCompleted) {
+        if (isCancelled) {
+          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">💰 Средства возвращены (100%)</span>';
+        } else if (isCompleted) {
           badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">✓ Завершен</span>';
         } else if (isError) {
           badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse">⚠️ Сбой печати (E-04)</span>';
@@ -836,8 +839,8 @@
           badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">● Готов к выдаче</span>';
         }
 
-        // БАГ 2: Если статус 'Завершен' (COMPLETED) — скрываем QR-код!
-        const showQrAndCode = !isCompleted;
+        // Если статус 'Завершен' или 'Отменен (Возврат)' — скрываем QR-код!
+        const showQrAndCode = !isCompleted && !isCancelled;
 
         return `
           <div class="bg-white p-3.5 rounded-2xl border ${isError ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} shadow-sm space-y-2">
@@ -875,7 +878,7 @@
               </div>
             ` : `
               <div class="bg-slate-50 px-2.5 py-1.5 rounded-lg text-[10px] text-slate-400 flex items-center justify-between">
-                <span>Заказ выдан в МФУ</span>
+                <span>${isCancelled ? 'Печать отменена (возврат средств)' : 'Заказ выдан в МФУ'}</span>
                 <span class="font-semibold text-slate-500">QR-код деактивирован</span>
               </div>
             `}
