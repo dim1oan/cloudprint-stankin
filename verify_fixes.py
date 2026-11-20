@@ -42,38 +42,44 @@ def run_tests():
     assert res_bad_print.status_code == 400, f"Печать на сломанном МФУ должна быть заблокирована с 400! Ответ: {res_bad_print.status_code}"
     print(f"✔ БАГ 2 (Печать на сломанном терминале) решен: бэкенд корректно вернул HTTP 400 ({res_bad_print.json()['detail']}).")
 
-    # 3. Успешная печать на рабочем терминале с выбором ГОСТ / Без ГОСТ
-    # Сначала проверяем заказ без ГОСТ (стандартная печать)
+    # 3. Успешная печать на рабочем терминале с выбором ГОСТ / Без ГОСТ и тарифами (5 ₽ Ч/Б, 10 ₽ Цвет)
+    # Сначала проверяем заказ без ГОСТ в режиме Ч/Б (10 стр. * 5.0 ₽ = 50.0 ₽)
     res_nogost_print = client.post("/api/client/order", json={
         "user_id": 1,
         "terminal_id": 2,
         "file_name": "Шпаргалка_по_физике.docx",
         "page_count": 10,
-        "price_rub": 30.0,
+        "price_rub": 50.0, # 10 стр. * 5 ₽
         "payment_method": "bonus",
-        "is_gost": False
+        "is_gost": False,
+        "is_color": False,
+        "stapling": False
     })
     assert res_nogost_print.status_code == 200, f"Ошибка создания заказа без ГОСТ: {res_nogost_print.text}"
     nogost_order = res_nogost_print.json()
     assert nogost_order.get("is_gost") is False, "Флаг is_gost должен быть False"
-    print(f"✔ Заказ без ГОСТ (обычная печать) успешно создан: ID={nogost_order['order_id']}, ГОСТ={nogost_order['is_gost']}.")
+    assert nogost_order.get("is_color") is False, "Флаг is_color должен быть False"
+    print(f"✔ Заказ без ГОСТ (Ч/Б печать, 5 ₽/стр) успешно создан: ID={nogost_order['order_id']}, Стоимость={nogost_order['price_rub']} ₽.")
 
-    # Затем создаем актуальный заказ по ГОСТ 7.32 (20 стр., 60 руб.)
+    # Затем создаем актуальный заказ по ГОСТ 7.32 в ЦВЕТНОМ режиме (20 стр. * 10.0 ₽ = 200.0 ₽)
     res_good_print = client.post("/api/client/order", json={
         "user_id": 1,
         "terminal_id": 2,
         "file_name": "Лабораторная_работа_СТАНКИН.pdf",
         "page_count": 20,
-        "price_rub": 60.0,
+        "price_rub": 200.0, # 20 стр. * 10 ₽
         "payment_method": "sbp",
-        "is_gost": True
+        "is_gost": True,
+        "is_color": True,
+        "stapling": False
     })
     assert res_good_print.status_code == 200, f"Ошибка создания заказа: {res_good_print.text}"
     new_order = res_good_print.json()
     new_order_id = new_order["order_id"]
     pickup_code = new_order["pickup_code"]
     assert new_order.get("is_gost") is True, "Флаг is_gost должен быть True"
-    print(f"✔ Новый заказ по ГОСТ 7.32 успешно создан: ID={new_order_id}, Код={new_order['order_code']}, ГОСТ={new_order['is_gost']}.")
+    assert new_order.get("is_color") is True, "Флаг is_color должен быть True"
+    print(f"✔ Новый заказ по ГОСТ 7.32 (Цветная печать, 10 ₽/стр): ID={new_order_id}, Стоимость={new_order['price_rub']} ₽.")
 
     # 4. Проверка БАГА 2: Список заказов студента теперь содержит новые заказы первыми
     res_updated_orders = client.get("/api/client/orders?user_id=1")
@@ -94,7 +100,7 @@ def run_tests():
     ticket = res_issue.json()["ticket"]
     ticket_id = ticket["id"]
     assert ticket["order_id"] == new_order_id, "Тикет должен быть привязан к order_id"
-    assert ticket["price_rub"] == 60.0, "В тикете должна отображаться стоимость заказа 60 руб."
+    assert ticket["price_rub"] == 200.0, "В тикете должна отображаться стоимость заказа 200 руб."
     print(f"✔ БАГ 1 решен: Тикет #{ticket_id} успешно зарегистрирован с привязкой к заказу #{new_order_id} (стоимость: {ticket['price_rub']} ₽).")
 
     # Проверяем, что терминал №2 перешел в статус Замятие E-04
@@ -128,10 +134,10 @@ def run_tests():
     })
     assert res_comp.status_code == 200, f"Ошибка компенсации: {res_comp.text}"
     comp_json = res_comp.json()
-    assert comp_json["compensation_added"] == 60.0, f"Должно начислиться ровно 100% (60.0 руб.), а начислилось {comp_json.get('compensation_added')}"
+    assert comp_json["compensation_added"] == 200.0, f"Должно начислиться ровно 100% (200.0 руб.), а начислилось {comp_json.get('compensation_added')}"
     
     user_after_comp = database.get_student_user(1)
-    assert user_after_comp["balance_rub"] == bal_before_reroute + 60.0, "Баланс студента должен увеличиться ровно на 60 руб. при возврате средств"
+    assert user_after_comp["balance_rub"] == bal_before_reroute + 200.0, "Баланс студента должен увеличиться ровно на 200 руб. при возврате средств"
     print(f"✔ Возврат средств (100% компенсация): начислено ровно {comp_json['compensation_added']} ₽. Баланс: {bal_before_reroute} -> {user_after_comp['balance_rub']} ₽.")
 
     # 8. Проверка опции СШИТИЯ СТЕПЛЕРОМ (+15 ₽) и расхода скоб в степлерном модуле
@@ -141,7 +147,7 @@ def run_tests():
     staples_before = term1_before["staples_count"]
     assert staples_before == 4850, f"Начальное количество скоб на Терминале 1 должно быть 4850, получено {staples_before}"
 
-    # Создаем заказ со сшитием (20 стр. + 15 ₽ сшитие = 75 ₽) с оплатой бонусами
+    # Создаем заказ со сшитием (20 стр. цветная = 200 ₽ + 15 ₽ сшитие = 215 ₽) с оплатой бонусами
     user_before_staple = database.get_student_user(1)
     bal_before_staple = user_before_staple["balance_rub"]
 
@@ -150,7 +156,7 @@ def run_tests():
         "terminal_id": 1,
         "file_name": "Курсовая_работа_со_сшивкой.pdf",
         "page_count": 20,
-        "price_rub": 75.0, # 20*3.0 + 15.0
+        "price_rub": 215.0, # 20*10.0 + 15.0
         "payment_method": "bonus",
         "is_gost": True,
         "stapling": True,
@@ -159,17 +165,17 @@ def run_tests():
     assert res_staple_order.status_code == 200, f"Ошибка создания заказа со сшитием: {res_staple_order.text}"
     staple_order_data = res_staple_order.json()
     assert staple_order_data["stapling"] is True, "Флаг stapling должен быть True"
-    assert staple_order_data["price_rub"] == 75.0, "Стоимость должна быть 75.0 ₽ (+15 ₽ за сшитие)"
+    assert staple_order_data["price_rub"] == 215.0, "Стоимость должна быть 215.0 ₽ (200 ₽ печать + 15 ₽ сшитие)"
 
     # Проверяем уменьшение остатка скоб на 1 шт.
     term1_after = database.get_terminal(1)
     assert term1_after["staples_count"] == staples_before - 1, f"Счетчик скоб должен уменьшиться на 1: было {staples_before}, стало {term1_after['staples_count']}"
-    print(f"✔ Опция сшития степлером (+15 ₽): заказ оформлен на 75.00 ₽, счетчик скоб на терминале уменьшился с {staples_before} до {term1_after['staples_count']}.")
+    print(f"✔ Опция сшития степлером (+15 ₽): заказ оформлен на 215.00 ₽, счетчик скоб на терминале уменьшился с {staples_before} до {term1_after['staples_count']}.")
 
     # Проверяем списание бонусов с баланса (1 бонус = 1 ₽)
     user_after_staple = database.get_student_user(1)
-    assert user_after_staple["balance_rub"] == bal_before_staple - 75.0, "С бонусного баланса должно списаться 75 бонусов"
-    print(f"✔ Оплата сшития бонусами: с баланса студента списано 75.00 ₽ (было {bal_before_staple} ₽, стало {user_after_staple['balance_rub']} ₽).")
+    assert user_after_staple["balance_rub"] == bal_before_staple - 215.0, "С бонусного баланса должно списаться 215 бонусов"
+    print(f"✔ Оплата сшития бонусами: с баланса студента списано 215.00 ₽ (было {bal_before_staple} ₽, стало {user_after_staple['balance_rub']} ₽).")
 
     # Проверяем отображение флагов сшития и цветности в истории заказов
     orders_check = client.get("/api/client/orders?user_id=1").json()["orders"]

@@ -73,7 +73,7 @@ class ClientOrderRequest(BaseModel):
     terminal_id: int = Field(1, description="ID выбранного терминала")
     file_name: Optional[str] = Field("Курсовой_проект_Детали_машин.pdf", description="Имя файла")
     page_count: Optional[int] = Field(20, gt=0, description="Число страниц")
-    price_rub: Optional[float] = Field(60.0, gt=0, description="Стоимость печати")
+    price_rub: Optional[float] = Field(200.0, gt=0, description="Стоимость печати (10 ₽/стр цветная, 5 ₽/стр ч/б, +15 ₽ сшитие)")
     payment_method: Optional[str] = Field("sbp", description="Способ оплаты: sbp или bonus")
     is_gost: Optional[bool] = Field(True, description="Оформление по ГОСТ 7.32 (True) или стандартная печать (False)")
     stapling: Optional[bool] = Field(False, description="Сшить страницы степлером (+15 ₽ за комплект)")
