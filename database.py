@@ -58,11 +58,21 @@ def init_db(force_reseed: bool = False):
         total_printed_pages INTEGER NOT NULL DEFAULT 0,
         cartridge_model TEXT NOT NULL DEFAULT 'TK-1150',
         cartridge_nominal INTEGER NOT NULL DEFAULT 3000,
+        staples_count INTEGER NOT NULL DEFAULT 5000,
+        staples_max INTEGER NOT NULL DEFAULT 5000,
         ip_address TEXT NOT NULL,
         last_service TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )
     """)
+
+    # Миграция: проверка наличия столбцов staples_count и staples_max в таблице terminals
+    cursor.execute("PRAGMA table_info(terminals)")
+    term_cols = [c["name"] for c in cursor.fetchall()]
+    if "staples_count" not in term_cols:
+        cursor.execute("ALTER TABLE terminals ADD COLUMN staples_count INTEGER DEFAULT 5000")
+    if "staples_max" not in term_cols:
+        cursor.execute("ALTER TABLE terminals ADD COLUMN staples_max INTEGER DEFAULT 5000")
 
     # Таблица пользователей (студентов и сотрудников)
     cursor.execute("""
@@ -90,17 +100,23 @@ def init_db(force_reseed: bool = False):
         status TEXT NOT NULL DEFAULT 'Завершен',
         pickup_code TEXT,
         is_gost INTEGER DEFAULT 1,
+        stapling INTEGER DEFAULT 0,
+        is_color INTEGER DEFAULT 1,
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id),
         FOREIGN KEY (terminal_id) REFERENCES terminals (id)
     )
     """)
 
-    # Миграция: проверка наличия столбца is_gost в существующей таблице orders
+    # Миграция: проверка наличия столбцов is_gost, stapling, is_color в существующей таблице orders
     cursor.execute("PRAGMA table_info(orders)")
     order_cols = [c["name"] for c in cursor.fetchall()]
     if "is_gost" not in order_cols:
         cursor.execute("ALTER TABLE orders ADD COLUMN is_gost INTEGER DEFAULT 1")
+    if "stapling" not in order_cols:
+        cursor.execute("ALTER TABLE orders ADD COLUMN stapling INTEGER DEFAULT 0")
+    if "is_color" not in order_cols:
+        cursor.execute("ALTER TABLE orders ADD COLUMN is_color INTEGER DEFAULT 1")
 
     # Таблица обращений в техподдержку (тикетов)
     cursor.execute("""
@@ -180,13 +196,13 @@ def seed_demo_data(conn):
         (
             1, "STANKIN-OLD-01", "Терминал №1 (Старый корпус)", "Старый корпус",
             "Старый корпус, холл 1 этажа (рядом с гардеробом)", "Замятие E-04",
-            140, 500, 1240, 14240, "TK-1150", 3000,
+            140, 500, 1240, 14240, "TK-1150", 3000, 4850, 5000,
             "192.168.10.15", "2026-11-19 18:00:00", now_str
         ),
         (
             2, "STANKIN-NEW-01", "Терминал №2 (Новый корпус)", "Новый корпус",
             "Новый корпус, холл 1 этажа (у поста с охраной)", "Онлайн",
-            460, 500, 410, 8410, "TK-1150", 3000,
+            460, 500, 410, 8410, "TK-1150", 3000, 4910, 5000,
             "192.168.10.22", "2026-11-20 08:30:00", now_str
         )
     ]
@@ -194,8 +210,8 @@ def seed_demo_data(conn):
     INSERT OR REPLACE INTO terminals (
         id, code, name, campus, location, status,
         paper_sheets, paper_max, toner_printed_pages, total_printed_pages,
-        cartridge_model, cartridge_nominal, ip_address, last_service, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        cartridge_model, cartridge_nominal, staples_count, staples_max, ip_address, last_service, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, terminals_data)
 
     # 2. Пользователи (студенты)
@@ -303,6 +319,9 @@ def get_terminals_list():
             "cartridge_nominal": r["cartridge_nominal"],
             "toner_percent": toner_pct,
             "toner_pages_left": max(0, r["cartridge_nominal"] - r["toner_printed_pages"]),
+            "staples_count": r["staples_count"] if "staples_count" in r.keys() else 4900,
+            "staples_max": r["staples_max"] if "staples_max" in r.keys() else 5000,
+            "staples_percent": round(100.0 * (r["staples_count"] if "staples_count" in r.keys() else 4900) / (r["staples_max"] if "staples_max" in r.keys() else 5000), 1),
             "ip_address": r["ip_address"],
             "last_service": r["last_service"],
             "updated_at": r["updated_at"]
@@ -388,12 +407,13 @@ def clear_jam(terminal_id: int):
     conn.close()
     return get_terminal(terminal_id)
 
-def simulate_print_job(terminal_id: int, pages: int = 20, create_order: bool = True):
+def simulate_print_job(terminal_id: int, pages: int = 20, create_order: bool = True, stapling: bool = False):
     """
     Симуляция процесса печати:
     - Проверяет статус терминала (БАГ №2: запрет печати на сломанном МФУ);
     - Прибавляет `pages` к счетчикам отпечатанных страниц;
     - Вычитает `pages` листов бумаги;
+    - Если stapling=True, расходует 1 скобу из степлерного модуля;
     - Если create_order=True, создает запись завершенного заказа в БД.
     """
     conn = get_db_connection()
@@ -431,6 +451,9 @@ def simulate_print_job(terminal_id: int, pages: int = 20, create_order: bool = T
     new_total_pages = term["total_printed_pages"] + pages
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    cur_staples = term["staples_count"] if "staples_count" in term.keys() else 5000
+    new_staples = max(0, cur_staples - (1 if stapling else 0))
+
     new_toner_pct = calculate_toner_percent(new_toner_pages, term["cartridge_nominal"])
     status = term["status"]
     if status not in ("Замятие E-04", "Ожидает ТО"):
@@ -441,9 +464,9 @@ def simulate_print_job(terminal_id: int, pages: int = 20, create_order: bool = T
 
     cursor.execute("""
     UPDATE terminals 
-    SET paper_sheets = ?, toner_printed_pages = ?, total_printed_pages = ?, status = ?, updated_at = ?
+    SET paper_sheets = ?, toner_printed_pages = ?, total_printed_pages = ?, staples_count = ?, status = ?, updated_at = ?
     WHERE id = ?
-    """, (new_paper, new_toner_pages, new_total_pages, status, now_str, terminal_id))
+    """, (new_paper, new_toner_pages, new_total_pages, new_staples, status, now_str, terminal_id))
 
     if create_order:
         # Создаем запись симулированного заказа
@@ -462,9 +485,9 @@ def simulate_print_job(terminal_id: int, pages: int = 20, create_order: bool = T
         price = round(pages * 5.0, 2)
 
         cursor.execute("""
-        INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'Завершен', ?)
-        """, (rand_code, user_id, terminal_id, file_name, pages, price, now_str))
+        INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, stapling, is_color, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'Завершен', ?, 1, ?)
+        """, (rand_code, user_id, terminal_id, file_name, pages, price, 1 if stapling else 0, now_str))
 
     conn.commit()
     conn.close()
@@ -869,7 +892,7 @@ def get_orders_list(limit: int = 50):
     cursor = conn.cursor()
     cursor.execute("""
     SELECT 
-        o.id, o.order_code, o.file_name, o.page_count, o.price_rub, o.status, o.pickup_code, o.is_gost, o.created_at,
+        o.id, o.order_code, o.file_name, o.page_count, o.price_rub, o.status, o.pickup_code, o.is_gost, o.stapling, o.is_color, o.created_at,
         u.full_name as user_name, u.group_code as user_group,
         term.name as terminal_name, term.code as terminal_code
     FROM orders o
@@ -949,14 +972,16 @@ def get_student_user(user_id: int = 1):
         "created_at": row["created_at"]
     }
 
-def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str = "Курсовой_проект_Детали_машин.pdf", page_count: int = 20, price_rub: float = 60.0, payment_method: str = "sbp", is_gost: bool = True):
+def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str = "Курсовой_проект_Детали_машин.pdf", page_count: int = 20, price_rub: float = 60.0, payment_method: str = "sbp", is_gost: bool = True, stapling: bool = False, is_color: bool = True):
     """
     Создание и оплата заказа через мобильный интерфейс студента:
     - Выбор режима: оформление по ГОСТ 7.32 (is_gost=True) или стандартная печать (is_gost=False);
+    - Опция сшития страниц степлером (+15 ₽): stapling=True;
+    - Опция цветности печати: is_color=True (цветная) или False (ч/б);
     - БАГ №2: Запрет создания и запуска печати студентом на неработающем МФУ;
     - Генерирует уникальный цифровой код выдачи (например, 654-321);
     - Выполняет транзакцию (СБП или списание бонусных баллов);
-    - Моделирует физическую печать на терминале (списывает листы и пересчитывает тонер);
+    - Моделирует физическую печать на терминале (списывает листы, скобы и пересчитывает тонер);
     - Возвращает полные данные заказа для экрана выдачи.
     """
     # Проверяем терминал и его статус перед оформлением
@@ -1004,7 +1029,7 @@ def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str =
         cursor.execute("""
         INSERT INTO transactions (user_id, ticket_id, amount_rub, transaction_type, description, created_at)
         VALUES (?, NULL, ?, 'Списание', ?, ?)
-        """, (user_id, -price_rub, f"Оплата заказа {rand_order_code} бонусами ({page_count} стр.)", now_str))
+        """, (user_id, -price_rub, f"Оплата заказа {rand_order_code} бонусами ({page_count} стр.{', со сшитием' if stapling else ''})", now_str))
     else:
         # Оплата через СБП
         cursor.execute("""
@@ -1014,19 +1039,19 @@ def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str =
         cursor.execute("""
         INSERT INTO transactions (user_id, ticket_id, amount_rub, transaction_type, description, created_at)
         VALUES (?, NULL, ?, 'Списание', ?, ?)
-        """, (user_id, -price_rub, f"Оплата заказа {rand_order_code} ({page_count} стр.)", now_str))
+        """, (user_id, -price_rub, f"Оплата заказа {rand_order_code} ({page_count} стр.{', со сшитием' if stapling else ''})", now_str))
 
     # Создаем заказ (статус 'Готов к выдаче' для активного получения)
     cursor.execute("""
-    INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, pickup_code, is_gost, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'Готов к выдаче', ?, ?, ?)
-    """, (rand_order_code, user_id, terminal_id, file_name, page_count, price_rub, pickup_code, 1 if is_gost else 0, now_str))
+    INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, pickup_code, is_gost, stapling, is_color, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'Готов к выдаче', ?, ?, ?, ?, ?)
+    """, (rand_order_code, user_id, terminal_id, file_name, page_count, price_rub, pickup_code, 1 if is_gost else 0, 1 if stapling else 0, 1 if is_color else 0, now_str))
     order_id = cursor.lastrowid
     conn.commit()
     conn.close()
 
-    # Физическое списание бумаги и тонера на выбранном терминале (без дублирования заказа)
-    sim_res = simulate_print_job(terminal_id, page_count, create_order=False)
+    # Физическое списание бумаги, тонера и скобы степлера на выбранном терминале
+    sim_res = simulate_print_job(terminal_id, page_count, create_order=False, stapling=stapling)
     if isinstance(sim_res, dict) and "error" in sim_res:
         return sim_res
 
@@ -1043,6 +1068,8 @@ def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str =
         "price_rub": price_rub,
         "payment_method": payment_method,
         "is_gost": bool(is_gost),
+        "stapling": bool(stapling),
+        "is_color": bool(is_color),
         "terminal_id": terminal_id,
         "terminal_code": term["code"] if term else "STANKIN-01",
         "terminal_name": term["name"] if term else "Терминал СТАНКИН",
@@ -1132,7 +1159,7 @@ def get_student_orders_list(user_id: int = 1):
     cursor.execute("""
     SELECT 
         o.id, o.order_code, o.user_id, o.terminal_id, o.file_name, o.page_count, 
-        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.created_at,
+        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.stapling, o.is_color, o.created_at,
         t.code as terminal_code, t.name as terminal_name, t.campus as terminal_campus, 
         t.location as terminal_location, t.status as terminal_status
     FROM orders o
@@ -1188,7 +1215,7 @@ def get_student_active_order(user_id: int = 1):
     cursor.execute("""
     SELECT 
         o.id, o.order_code, o.user_id, o.terminal_id, o.file_name, o.page_count, 
-        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.created_at,
+        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.stapling, o.is_color, o.created_at,
         t.code as terminal_code, t.name as terminal_name, t.campus as terminal_campus, 
         t.location as terminal_location, t.status as terminal_status, t.paper_sheets, t.paper_max,
         t.toner_printed_pages, t.cartridge_nominal

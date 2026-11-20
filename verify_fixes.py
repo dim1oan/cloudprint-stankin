@@ -134,7 +134,51 @@ def run_tests():
     assert user_after_comp["balance_rub"] == bal_before_reroute + 60.0, "Баланс студента должен увеличиться ровно на 60 руб. при возврате средств"
     print(f"✔ Возврат средств (100% компенсация): начислено ровно {comp_json['compensation_added']} ₽. Баланс: {bal_before_reroute} -> {user_after_comp['balance_rub']} ₽.")
 
-    # 8. Сброс БД обратно к исходному демо-состоянию для чистого старта
+    # 8. Проверка опции СШИТИЯ СТЕПЛЕРОМ (+15 ₽) и расхода скоб в степлерном модуле
+    # Сначала проверяем начальное количество скоб на Терминале №1 (Старый корпус)
+    database.clear_jam(1) # сбрасываем замятие на терминале 1
+    term1_before = database.get_terminal(1)
+    staples_before = term1_before["staples_count"]
+    assert staples_before == 4850, f"Начальное количество скоб на Терминале 1 должно быть 4850, получено {staples_before}"
+
+    # Создаем заказ со сшитием (20 стр. + 15 ₽ сшитие = 75 ₽) с оплатой бонусами
+    user_before_staple = database.get_student_user(1)
+    bal_before_staple = user_before_staple["balance_rub"]
+
+    res_staple_order = client.post("/api/client/order", json={
+        "user_id": 1,
+        "terminal_id": 1,
+        "file_name": "Курсовая_работа_со_сшивкой.pdf",
+        "page_count": 20,
+        "price_rub": 75.0, # 20*3.0 + 15.0
+        "payment_method": "bonus",
+        "is_gost": True,
+        "stapling": True,
+        "is_color": True
+    })
+    assert res_staple_order.status_code == 200, f"Ошибка создания заказа со сшитием: {res_staple_order.text}"
+    staple_order_data = res_staple_order.json()
+    assert staple_order_data["stapling"] is True, "Флаг stapling должен быть True"
+    assert staple_order_data["price_rub"] == 75.0, "Стоимость должна быть 75.0 ₽ (+15 ₽ за сшитие)"
+
+    # Проверяем уменьшение остатка скоб на 1 шт.
+    term1_after = database.get_terminal(1)
+    assert term1_after["staples_count"] == staples_before - 1, f"Счетчик скоб должен уменьшиться на 1: было {staples_before}, стало {term1_after['staples_count']}"
+    print(f"✔ Опция сшития степлером (+15 ₽): заказ оформлен на 75.00 ₽, счетчик скоб на терминале уменьшился с {staples_before} до {term1_after['staples_count']}.")
+
+    # Проверяем списание бонусов с баланса (1 бонус = 1 ₽)
+    user_after_staple = database.get_student_user(1)
+    assert user_after_staple["balance_rub"] == bal_before_staple - 75.0, "С бонусного баланса должно списаться 75 бонусов"
+    print(f"✔ Оплата сшития бонусами: с баланса студента списано 75.00 ₽ (было {bal_before_staple} ₽, стало {user_after_staple['balance_rub']} ₽).")
+
+    # Проверяем отображение флагов сшития и цветности в истории заказов
+    orders_check = client.get("/api/client/orders?user_id=1").json()["orders"]
+    latest_order = orders_check[0]
+    assert latest_order["stapling"] == 1 or latest_order["stapling"] is True, "В истории заказов stapling должен быть 1"
+    assert latest_order["is_color"] == 1 or latest_order["is_color"] is True, "В истории заказов is_color должен быть 1"
+    print("✔ Проверено отображение бейджей сшития и цветности в реестре заказов.")
+
+    # 9. Сброс БД обратно к исходному демо-состоянию для чистого старта
     database.init_db(force_reseed=True)
     print("✔ База данных сброшена в чистое эталонное демо-состояние.")
 

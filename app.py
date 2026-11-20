@@ -62,6 +62,7 @@ class CompensateAndRerouteRequest(BaseModel):
 class SimulatePrintRequest(BaseModel):
     terminal_id: int = Field(..., description="ID терминала")
     pages: Optional[int] = Field(20, gt=0, le=500, description="Количество отпечатанных страниц")
+    stapling: Optional[bool] = Field(False, description="Сшитие страниц степлером")
 
 class SimulateJamRequest(BaseModel):
     terminal_id: int = Field(..., description="ID терминала")
@@ -75,6 +76,8 @@ class ClientOrderRequest(BaseModel):
     price_rub: Optional[float] = Field(60.0, gt=0, description="Стоимость печати")
     payment_method: Optional[str] = Field("sbp", description="Способ оплаты: sbp или bonus")
     is_gost: Optional[bool] = Field(True, description="Оформление по ГОСТ 7.32 (True) или стандартная печать (False)")
+    stapling: Optional[bool] = Field(False, description="Сшить страницы степлером (+15 ₽ за комплект)")
+    is_color: Optional[bool] = Field(True, description="Цветная печать (True) или ч/б (False)")
 
 class ClientIssueRequest(BaseModel):
     user_id: Optional[int] = Field(1, description="ID студента")
@@ -148,7 +151,9 @@ async def api_client_create_order(req: ClientOrderRequest):
         page_count=req.page_count,
         price_rub=req.price_rub,
         payment_method=req.payment_method,
-        is_gost=req.is_gost if req.is_gost is not None else True
+        is_gost=req.is_gost if req.is_gost is not None else True,
+        stapling=req.stapling if req.stapling is not None else False,
+        is_color=req.is_color if req.is_color is not None else True
     )
     if not res:
         raise HTTPException(status_code=400, detail="Ошибка при создании заказа")
@@ -354,7 +359,7 @@ async def api_simulate_print(req: SimulatePrintRequest):
     - Динамически пересчитывает тонер;
     - Фиксирует выполненный заказ.
     """
-    term = database.simulate_print_job(terminal_id=req.terminal_id, pages=req.pages)
+    term = database.simulate_print_job(terminal_id=req.terminal_id, pages=req.pages, stapling=bool(req.stapling))
     if not term:
         raise HTTPException(status_code=404, detail="Терминал не найден")
     if isinstance(term, dict) and "error" in term:
