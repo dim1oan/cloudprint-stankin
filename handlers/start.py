@@ -1,10 +1,29 @@
+import os
+import re
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import (
+    Message, CallbackQuery, FSInputFile,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
 from aiogram.filters import CommandStart, Command
 from keyboards import get_main_menu_keyboard
 import database
 
 router = Router()
+
+def is_gazyava_trigger(message: Message) -> bool:
+    """Проверка триггера на фразу 'я щас заберу у тебя газяву' и её вариации."""
+    if not message.text:
+        return False
+    t = message.text.lower().strip()
+    clean = re.sub(r"[^\w\s]", "", t)
+    # Прямое совпадение
+    if "я щас заберу у тебя газяву" in clean or "я сейчас заберу у тебя газяву" in clean:
+        return True
+    # Комбинации слов "заберу/отберу/отдай" + "газяв"
+    has_action = any(w in clean for w in ["заберу", "отберу", "забрать", "отдай", "отниму", "украду", "сворую"])
+    has_gazyava = "газяв" in clean or "газировк" in clean or "газ воду" in clean
+    return has_action and has_gazyava
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
@@ -54,3 +73,66 @@ async def show_profile(message: Message):
         f"ℹ️ Бонусы начисляются за академические успехи, а также в виде 100% компенсации при замятии бумаги."
     )
     await message.answer(text, parse_mode="Markdown")
+
+@router.message(is_gazyava_trigger)
+async def handle_gazyava_message(message: Message):
+    """Пасхалка: ответ стикером на 'я щас заберу у тебя газяву'."""
+    # 1. Проверяем, сохранён ли кастомный стикер в базе данных или переменных окружения
+    custom_sticker_id = database.get_system_setting("gazyava_sticker", "") or os.getenv("GAZYAVA_STICKER_ID", "")
+
+    if custom_sticker_id:
+        try:
+            await message.answer_sticker(sticker=custom_sticker_id)
+            return
+        except Exception:
+            pass
+
+    # 2. Если кастомный не задан, отправляем фирменный WebP-стикер из assets
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sticker_path = os.path.join(base_dir, "assets", "gazyava.webp")
+
+    if os.path.exists(sticker_path):
+        try:
+            sticker_file = FSInputFile(sticker_path)
+            await message.answer_sticker(sticker=sticker_file)
+            return
+        except Exception:
+            pass
+
+    # 3. Текстовый фоллбэк на случай проблем со стикером
+    await message.answer("🥤 Не трожь газяву! Это святое для студента СТАНКИНа! 💥")
+
+@router.message(F.sticker)
+async def handle_incoming_sticker(message: Message):
+    """
+    Если пользователь присылает боту стикер, бот предлагает
+    установить его в качестве ответа на 'я щас заберу у тебя газяву'.
+    """
+    sticker_id = message.sticker.file_id
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🥤 Назначить на «я щас заберу у тебя газяву»", callback_data=f"set_gaz_sticker")]
+    ])
+    # Временно сохраняем последний присланный стикер
+    database.set_system_setting("last_received_sticker", sticker_id)
+    await message.answer(
+        "✨ <b>Классный стикер!</b>\n\n"
+        "Хотите назначить его в качестве ответа бота на фразу:\n"
+        "<i>«я щас заберу у тебя газяву»</i>?",
+        reply_markup=kb,
+        parse_mode="HTML"
+    )
+
+@router.callback_query(F.data == "set_gaz_sticker")
+async def handle_set_gaz_sticker(callback: CallbackQuery):
+    """Подтверждение установки стикера."""
+    last_sticker = database.get_system_setting("last_received_sticker", "")
+    if last_sticker:
+        database.set_system_setting("gazyava_sticker", last_sticker)
+        await callback.answer("Стикер успешно сохранён!", show_alert=True)
+        await callback.message.edit_text(
+            "✅ <b>Стикер успешно установлен!</b>\n\n"
+            "Теперь напишите в чат: <code>я щас заберу у тебя газяву</code> — и бот ответит именно этим стикером!",
+            parse_mode="HTML"
+        )
+    else:
+        await callback.answer("Стикер не найден. Пришлите стикер ещё раз.", show_alert=True)

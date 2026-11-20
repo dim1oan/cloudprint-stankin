@@ -172,6 +172,14 @@ def init_db(force_reseed: bool = False):
     )
     """)
 
+    # Таблица системных настроек и кастомных параметров (например, стикеров)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS system_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )
+    """)
+
     conn.commit()
 
     # Проверка на необходимость предзаполнения
@@ -1282,5 +1290,23 @@ def get_telegram_chat_id_by_user(user_id: int):
 
 # Псевдоним для полной совместимости
 compensate_ticket_100 = compensate_student
+
+def get_system_setting(key: str, default: str = "") -> str:
+    """Получение настройки системы по ключу."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT value FROM system_settings WHERE key = ?", (key,))
+    row = cursor.fetchone()
+    conn.close()
+    return row["value"] if row else default
+
+def set_system_setting(key: str, value: str):
+    """Сохранение настройки системы."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)", (key, value))
+    conn.commit()
+    conn.close()
+
 
 
