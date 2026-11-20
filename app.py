@@ -9,6 +9,8 @@
 """
 
 import os
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
@@ -17,8 +19,28 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 import uvicorn
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 
 import database
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s")
+logger = logging.getLogger("CloudPrint")
+
+# Экземпляры бота и фонового диспетчера
+tg_bot: Optional[Bot] = None
+tg_dp: Optional[Dispatcher] = None
+tg_task: Optional[asyncio.Task] = None
+
+async def send_tg_notification(chat_id: Optional[int], text: str, parse_mode: str = "Markdown", reply_markup = None):
+    """Отправка уведомления студенту в Telegram при наличии активного бота и chat_id."""
+    if not tg_bot or not chat_id:
+        return
+    try:
+        await tg_bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode, reply_markup=reply_markup)
+    except Exception as e:
+        logger.warning(f"Не удалось отправить уведомление в Telegram (chat_id={chat_id}): {e}")
 
 # Инициализация путей
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,9 +50,50 @@ CLIENT_HTML_PATH = os.path.join(TEMPLATES_DIR, "client.html")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global tg_bot, tg_dp, tg_task
     # Инициализация базы данных при старте приложения
     database.init_db()
+
+    # Запуск Telegram-бота, если задан BOT_TOKEN в переменных окружения или .env
+    bot_token = os.environ.get("BOT_TOKEN", "").strip()
+    if not bot_token:
+        try:
+            import config
+            bot_token = getattr(config, "BOT_TOKEN", "").strip()
+        except Exception:
+            pass
+
+    if bot_token and bot_token != "YOUR_BOT_TOKEN_HERE":
+        try:
+            logger.info("🤖 Инициализация Telegram-бота CloudPrint СТАНКИН...")
+            tg_bot = Bot(token=bot_token)
+            tg_dp = Dispatcher(storage=MemoryStorage())
+
+            from handlers import start, print_wizard, orders, support, admin
+            tg_dp.include_router(start.router)
+            tg_dp.include_router(print_wizard.router)
+            tg_dp.include_router(orders.router)
+            tg_dp.include_router(support.router)
+            tg_dp.include_router(admin.router)
+
+            tg_task = asyncio.create_task(tg_dp.start_polling(tg_bot))
+            logger.info("✅ Telegram-бот успешно запущен параллельно с веб-сервисом (единый сервис)!")
+        except Exception as e:
+            logger.error(f"❌ Не удалось запустить Telegram-бот: {e}")
+    else:
+        logger.info("ℹ️ BOT_TOKEN не задан. Веб-сервис работает в штатном режиме без Telegram-бота.")
+
     yield
+
+    # Корректное завершение фонового опроса бота
+    if tg_task:
+        tg_task.cancel()
+        try:
+            await tg_task
+        except asyncio.CancelledError:
+            pass
+    if tg_bot:
+        await tg_bot.session.close()
 
 app = FastAPI(
     title="CloudPrint СТАНКИН — Панель диспетчера и студенческий сервис",
@@ -273,6 +336,18 @@ async def api_add_message(ticket_id: int, req: MessageRequest):
     )
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
+
+    # Двусторонняя синхронизация: дублируем ответ диспетчера в Telegram студенту
+    chat_id = database.get_telegram_chat_id_by_ticket(ticket_id)
+    if chat_id:
+        tg_text = (
+            f"👨‍💼 **Ответ диспетчера техподдержки ({req.sender_name}):**\n\n"
+            f"{req.message}\n\n"
+            f"📋 Обращение: `{ticket['ticket_number']}` • Заказ: `{ticket.get('order_code', '—')}`\n"
+            f"💬 Вы можете ответить диспетчеру прямо здесь в чате бота или через веб-сайт!"
+        )
+        await send_tg_notification(chat_id, tg_text)
+
     return {"success": True, "ticket": ticket}
 
 @app.post("/api/tickets/{ticket_id}/compensate")
@@ -289,6 +364,21 @@ async def api_compensate(ticket_id: int, req: CompensateRequest):
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
     comp_added = ticket.get("last_compensation_added", req.amount_rub or ticket.get("price_rub") or ticket["compensation_rub"])
+
+    # Двусторонняя синхронизация: уведомление о компенсации в Telegram
+    chat_id = database.get_telegram_chat_id_by_ticket(ticket_id)
+    if chat_id:
+        student = database.get_student_user(ticket["user_id"])
+        bal = student["balance_rub"] if student else 0.0
+        tg_text = (
+            f"💰 **Вам начислена 100% компенсация!**\n\n"
+            f"Диспетчер **{req.dispatcher_name}** одобрил возврат средств по обращению `{ticket['ticket_number']}`.\n"
+            f"• Начислено: **+{comp_added:.2f} ₽** (бонусами 1:1 к рублю)\n"
+            f"• Текущий баланс: **{bal:.2f} ₽**\n\n"
+            f"Вы можете использовать баланс для нового заказа в боте или на сайте!"
+        )
+        await send_tg_notification(chat_id, tg_text)
+
     return {
         "success": True, 
         "message": f"100% компенсация ({comp_added:.2f} ₽) успешно начислена на баланс студента", 
@@ -305,6 +395,20 @@ async def api_reroute(ticket_id: int, req: ActionRequest):
     )
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
+
+    # Двусторонняя синхронизация: уведомление о переводе заказа в Telegram
+    chat_id = database.get_telegram_chat_id_by_ticket(ticket_id)
+    if chat_id:
+        pickup_code = ticket.get("pickup_code", "654-321")
+        tg_text = (
+            f"🔄 **Ваш заказ перенаправлен на резервный терминал!**\n\n"
+            f"Диспетчер **{req.dispatcher_name}** перевел печать:\n"
+            f"📍 **Новый корпус (Коворкинг 2 этажа)** • МФУ Онлайн.\n\n"
+            f"🔑 Новый цифровой пин-код: ` {pickup_code} `\n\n"
+            f"Подойдите к терминалу №2 и введите код на экране. Доплата не требуется!"
+        )
+        await send_tg_notification(chat_id, tg_text)
+
     return {"success": True, "message": "Заказ переведен на резервный терминал", "ticket": ticket}
 
 @app.post("/api/tickets/{ticket_id}/compensate-and-reroute")
@@ -319,6 +423,19 @@ async def api_compensate_and_reroute(ticket_id: int, req: CompensateAndRerouteRe
     )
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
+
+    chat_id = database.get_telegram_chat_id_by_ticket(ticket_id)
+    if chat_id:
+        pickup_code = ticket.get("pickup_code", "654-321")
+        tg_text = (
+            f"🔄 **Ваш заказ перенаправлен на 2-й корпус!**\n\n"
+            f"Диспетчер **{req.dispatcher_name}** перевел печать:\n"
+            f"📍 **Новый корпус (Коворкинг 2 этажа)** • МФУ Онлайн.\n\n"
+            f"🔑 Новый код выдачи: ` {pickup_code} `\n"
+            f"Печать состоится без доплат и очередей."
+        )
+        await send_tg_notification(chat_id, tg_text)
+
     return {
         "success": True,
         "message": "Заказ переведен на 2-й корпус (компенсация не начисляется, так как печать состоится)",
@@ -345,6 +462,16 @@ async def api_resolve_ticket(ticket_id: int, req: ActionRequest):
     )
     if not ticket:
         raise HTTPException(status_code=404, detail="Тикет не найден")
+
+    chat_id = database.get_telegram_chat_id_by_ticket(ticket_id)
+    if chat_id:
+        tg_text = (
+            f"✅ **Обращение {ticket['ticket_number']} решено!**\n\n"
+            f"Диспетчер **{req.dispatcher_name}** отметил проблему как устраненную.\n"
+            f"Благодарим за использование сервиса CloudPrint СТАНКИН!"
+        )
+        await send_tg_notification(chat_id, tg_text)
+
     return {"success": True, "message": "Тикет успешно закрыт", "ticket": ticket}
 
 # --- REST API: ПАНЕЛЬ СИМУЛЯЦИИ (DEMO MODE) ---

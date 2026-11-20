@@ -83,9 +83,16 @@ def init_db(force_reseed: bool = False):
         student_card TEXT UNIQUE NOT NULL,
         balance_rub REAL NOT NULL DEFAULT 0.0,
         email TEXT NOT NULL,
+        telegram_chat_id INTEGER,
         created_at TEXT NOT NULL
     )
     """)
+
+    # Миграция: проверка наличия столбца telegram_chat_id в таблице users
+    cursor.execute("PRAGMA table_info(users)")
+    user_cols = [c["name"] for c in cursor.fetchall()]
+    if "telegram_chat_id" not in user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN telegram_chat_id INTEGER")
 
     # Таблица заказов на печать
     cursor.execute("""
@@ -739,6 +746,7 @@ def compensate_student(ticket_id: int, amount_rub: float = None, dispatcher_name
     details = get_ticket_details(ticket_id)
     if details:
         details["last_compensation_added"] = amount_rub
+        details["compensation_added"] = amount_rub
     return details
 
 def reroute_order_to_campus(ticket_id: int, dispatcher_name: str = "Цырулев А. А."):
@@ -1231,4 +1239,48 @@ def get_student_active_order(user_id: int = 1):
     res = dict(row)
     res["toner_percent"] = calculate_toner_percent(res["toner_printed_pages"], res["cartridge_nominal"])
     return res
+
+def bind_user_telegram_chat(user_id: int, chat_id: int):
+    """Привязка Telegram chat_id к профилю студента."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (chat_id, user_id))
+    conn.commit()
+    conn.close()
+
+def get_user_by_telegram_chat(chat_id: int):
+    """Поиск пользователя по telegram chat_id."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE telegram_chat_id = ?", (chat_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_telegram_chat_id_by_ticket(ticket_id: int):
+    """Получение telegram chat_id студента, создавшего тикет."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT u.telegram_chat_id 
+    FROM tickets t 
+    JOIN users u ON t.user_id = u.id 
+    WHERE t.id = ?
+    """, (ticket_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row["telegram_chat_id"] if row and row["telegram_chat_id"] else None
+
+def get_telegram_chat_id_by_user(user_id: int):
+    """Получение telegram chat_id студента по user_id."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT telegram_chat_id FROM users WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row["telegram_chat_id"] if row and row["telegram_chat_id"] else None
+
+# Псевдоним для полной совместимости
+compensate_ticket_100 = compensate_student
+
 
