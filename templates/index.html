@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPrint СТАНКИН — Панель администратора и диспетчера техподдержки</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            stankin: {
+              navy: '#1B365D',        // Основной чистый темно-синий СТАНКИН
+              deep: '#0D2040',        // Глубокий оттенок шапки
+              lightNavy: '#254E86',   // Акцентный синий
+              crimson: '#8B0000',     // Фирменный темно-красный
+              burgundy: '#7A0C1E',    // Бордовый
+              accentRed: '#BA1B1D',   // Предупреждающий красный
+              gold: '#D97706',        // Золотистый акцент
+              surface: '#F8FAFC',     // Мягкий фон
+              card: '#FFFFFF',        // Белые карточки
+              border: '#E2E8F0'       // Мягкие границы
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Стилизация скроллбаров */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Пульсирующая индикация аварии E-04 */
+    @keyframes pulse-alarm {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.9; }
+    }
+    .animate-alarm {
+      animation: pulse-alarm 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col pb-24 selection:bg-stankin-navy selection:text-white">
+
+  <!-- ==================== ШАПКА ДАШБОРДА (HEADER) ==================== -->
+  <header class="bg-stankin-deep text-white border-b-2 border-stankin-burgundy sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Логотип МГТУ СТАНКИН и название системы -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-stankin-navy to-stankin-burgundy flex items-center justify-center font-bold text-white shadow-md border border-white/20">
+            <i class="fa-solid fa-print text-xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl font-extrabold tracking-tight text-white">CloudPrint <span class="text-red-400">СТАНКИН</span></span>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white/10 text-slate-200 border border-white/20">v2.0 Full-Stack</span>
+            </div>
+            <p class="text-xs text-slate-300 font-medium">
+              Панель администратора и диспетчера техподдержки смарт-полиграфии
+            </p>
+          </div>
+        </div>
+
+        <!-- Центральная кнопка быстрого перехода в Мобильный интерфейс студента -->
+        <div class="hidden md:flex items-center">
+          <a href="/client" target="_blank" class="bg-gradient-to-r from-stankin-lightNavy to-stankin-navy hover:from-blue-600 hover:to-stankin-lightNavy text-white font-bold text-xs py-2 px-3.5 rounded-xl border border-blue-400/30 transition-all flex items-center space-x-2 shadow-sm hover:shadow">
+            <i class="fa-solid fa-mobile-screen text-amber-300 text-sm"></i>
+            <span>Мобильный клиент студента (/client)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 ml-0.5"></i>
+          </a>
+        </div>
+
+        <!-- Информация о дежурстве и часах -->
+        <div class="flex items-center space-x-4 text-xs">
+          <div class="hidden lg:flex flex-col text-right">
+            <div class="flex items-center justify-end space-x-1.5 font-semibold text-slate-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Диспетчер: <b>Цырулев А. А.</b></span>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              Тех. админ: Ткачук Д. В.
+            </div>
+          </div>
+
+          <div class="bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-right">
+            <div id="liveClock" class="font-mono font-bold text-xs text-white">20.11.2026 13:20:00</div>
+            <div class="text-[10px] text-emerald-400 flex items-center justify-end space-x-1">
+              <i class="fa-solid fa-database text-[9px]"></i>
+              <span>SQLite3: cloudprint.db</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- КАРТОЧКИ СВОДНЫХ ПОКАЗАТЕЛЕЙ (KPI STATS) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      
+      <!-- 1: Терминалы -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Терминалов</span>
+          <span class="p-1 rounded-md bg-blue-50 text-stankin-navy"><i class="fa-solid fa-server"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalTerminals" class="text-xl font-bold text-slate-800">2</span>
+          <span class="text-[10px] text-slate-400">МФУ</span>
+        </div>
+      </div>
+
+      <!-- 2: В сети -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>В сети</span>
+          <span class="p-1 rounded-md bg-emerald-50 text-emerald-600"><i class="fa-solid fa-check"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiOnlineTerminals" class="text-xl font-bold text-emerald-600">1</span>
+          <span class="text-[10px] text-emerald-600 font-semibold">Готовы</span>
+        </div>
+      </div>
+
+      <!-- 3: Сбои -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Сбои / ТО</span>
+          <span class="p-1 rounded-md bg-red-50 text-red-600"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiErrorTerminals" class="text-xl font-bold text-red-600">1</span>
+          <span class="text-[10px] text-red-600 font-semibold">Внимание</span>
+        </div>
+      </div>
+
+      <!-- 4: Тикеты -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Обращения</span>
+          <span class="p-1 rounded-md bg-amber-50 text-amber-600"><i class="fa-solid fa-headset"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiActiveTickets" class="text-xl font-bold text-amber-600">1</span>
+          <span class="text-[10px] text-amber-600 font-semibold">В работе</span>
+        </div>
+      </div>
+
+      <!-- 5: Отпечатано -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Отпечатано</span>
+          <span class="p-1 rounded-md bg-indigo-50 text-indigo-600"><i class="fa-solid fa-file-lines"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalPages" class="text-xl font-bold text-slate-800">22 650</span>
+          <span class="text-[10px] text-slate-400">стр.</span>
+        </div>
+      </div>
+
+      <!-- 6: Выплачено компенсаций -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Компенсации</span>
+          <span class="p-1 rounded-md bg-rose-50 text-rose-600"><i class="fa-solid fa-coins"></i></span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalCompensation" class="text-xl font-bold text-stankin-burgundy">0.00</span>
+          <span class="text-[10px] text-rose-600 font-semibold">руб.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- НАВИГАЦИОННЫЕ ВКЛАДКИ (TABS) -->
+    <div class="border-b border-slate-200 bg-white rounded-xl shadow-sm px-4">
+      <nav class="flex space-x-3 sm:space-x-6 overflow-x-auto" aria-label="Вкладки">
+        <button onclick="switchTab('monitoring')" id="tabBtn-monitoring" class="tab-button inline-flex items-center py-3.5 border-b-2 font-bold text-sm text-stankin-navy border-stankin-navy transition-colors whitespace-nowrap">
+          <i class="fa-solid fa-server mr-2 text-stankin-lightNavy"></i>
+          <span>Мониторинг терминалов</span>
+        </button>
+
+        <button onclick="switchTab('support')" id="tabBtn-support" class="tab-button inline-flex items-center py-3.5 border-b-2 font-semibold text-sm text-slate-500 border-transparent hover:text-stankin-navy hover:border-slate-300 transition-colors whitespace-nowrap">
+          <i class="fa-solid fa-comments mr-2"></i>
+          <span>Чат техподдержки и компенсации</span>
+          <span id="ticketsBadge" class="ml-2 bg-amber-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">1</span>
+        </button>
+
+        <button onclick="switchTab('orders')" id="tabBtn-orders" class="tab-button inline-flex items-center py-3.5 border-b-2 font-semibold text-sm text-slate-500 border-transparent hover:text-stankin-navy hover:border-slate-300 transition-colors whitespace-nowrap">
+          <i class="fa-solid fa-receipt mr-2"></i>
+          <span>Журнал заказов и транзакций</span>
+        </button>
+
+        <button onclick="switchTab('about')" id="tabBtn-about" class="tab-button inline-flex items-center py-3.5 border-b-2 font-semibold text-sm text-slate-500 border-transparent hover:text-stankin-navy hover:border-slate-300 transition-colors whitespace-nowrap">
+          <i class="fa-solid fa-circle-info mr-2"></i>
+          <span>Паспорт проекта</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ==================== ВКЛАДКА 1: МОНИТОРИНГ ТЕРМИНАЛОВ ==================== -->
+    <section id="tabContent-monitoring" class="space-y-6">
+      
+      <!-- Сетка карточек терминалов -->
+      <div id="terminalsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+          <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+          <p>Загрузка телеметрии МФУ...</p>
+        </div>
+      </div>
+
+      <!-- Информационная плашка математической модели и регламентов -->
+      <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 text-xs text-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+        <div class="space-y-1">
+          <div class="font-bold text-stankin-navy flex items-center gap-1.5 text-sm">
+            <i class="fa-solid fa-calculator text-stankin-lightNavy"></i>
+            Математическая модель расхода тонера в системе CloudPrint:
+          </div>
+          <div class="font-mono bg-white px-3 py-1 rounded-lg border border-blue-200 text-stankin-navy inline-block font-bold">
+            R_toner = max(0, 100 * (1 - N_printed / 3000))
+          </div>
+          <p class="text-slate-500">
+            Паспортный ресурс картриджа Kyocera TK-1150: 3000 стр. при 5% заполнении листа ISO/IEC 19752.
+          </p>
+        </div>
+        <div class="text-[11px] text-slate-600 bg-white p-3 rounded-xl border border-blue-100 space-y-1 max-w-sm">
+          <div class="font-bold text-slate-800">Распределение обязанностей:</div>
+          <div>• Физическая заправка лотков (500 л) и картриджей: <b>дежурные специалисты</b></div>
+          <div>• Удаленная диспетчеризация инцидентов и компенсации: <b>Цырулев А. А.</b></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== ВКЛАДКА 2: ЧАТ ТЕХПОДДЕРЖКИ И КОМПЕНСАЦИИ ==================== -->
+    <section id="tabContent-support" class="hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Левая колонка: Список тикетов (4/12) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[670px]">
+          
+          <div class="p-3.5 border-b border-slate-200 bg-slate-50/70">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-inbox text-stankin-navy"></i>
+                Очередь обращений
+              </h3>
+              <span id="ticketsCountLabel" class="text-[10px] bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-full">1 тикет</span>
+            </div>
+            
+            <!-- Фильтры -->
+            <div class="flex space-x-1 text-xs">
+              <button onclick="filterTickets('all')" id="filterBtn-all" class="px-2.5 py-1 rounded-lg font-bold bg-stankin-navy text-white text-[11px]">Все</button>
+              <button onclick="filterTickets('active')" id="filterBtn-active" class="px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 text-[11px]">В работе</button>
+              <button onclick="filterTickets('resolved')" id="filterBtn-resolved" class="px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 text-[11px]">Решенные</button>
+            </div>
+          </div>
+
+          <div id="ticketsList" class="divide-y divide-slate-100 overflow-y-auto flex-1 p-2 space-y-2">
+            <div class="p-6 text-center text-slate-400">
+              <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Правая колонка: Окно диспетчера (Мессенджер-стиль) (8/12) -->
+        <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[670px]">
+          
+          <!-- Шапка чата: карточка студента и заказа -->
+          <div id="ticketHeader" class="p-3.5 border-b border-slate-200 bg-slate-50/90 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-full bg-stankin-navy text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                ИМ
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span id="selectedTicketStudentName" class="text-sm font-extrabold text-stankin-navy">Иванов М. В.</span>
+                  <span id="selectedTicketStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">В работе</span>
+                </div>
+                <div id="selectedTicketStudentInfo" class="text-[11px] text-slate-500">
+                  Группа ИДБ-25-15 • Билет: СТ-2025-0149 • Площадка: Старый корпус
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3 text-xs bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase font-bold">Баланс студента:</span>
+                <span id="selectedTicketUserBalance" class="font-extrabold text-stankin-navy text-sm">150.00 ₽</span>
+              </div>
+              <div class="border-l border-slate-200 pl-3">
+                <span class="text-slate-400 block text-[9px] uppercase font-bold">Заказ печати:</span>
+                <span id="selectedTicketOrderCode" class="font-bold text-slate-700">ORD-78129 (45 стр.)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ ДИСПЕТЧЕРА С АВТОМАТИЧЕСКИМ РАСЧЕТОМ КОМПЕНСАЦИИ (БАГ 1) -->
+          <div id="dispatcherActionsBar" class="p-2.5 bg-stankin-deep text-white border-b border-slate-700 flex flex-wrap items-center gap-2">
+            
+            <!-- БАГ 1: КНОПКА «НАЧИСЛИТЬ КОМПЕНСАЦИЮ (100%)» БЕЗ РУЧНОГО ВВОДА СУММЫ -->
+            <button onclick="triggerCompensate100()" id="btnCompensate100" class="bg-gradient-to-r from-stankin-burgundy to-red-600 hover:from-red-600 hover:to-red-700 active:scale-[0.98] text-white text-xs font-extrabold px-3.5 py-1.5 rounded-xl shadow-md transition-all flex items-center space-x-1.5 border border-red-300/40">
+              <i class="fa-solid fa-coins text-amber-300"></i>
+              <span>Начислить компенсацию (100% — <span id="actionBarCompCost">225.00 ₽</span>)</span>
+            </button>
+
+            <!-- КОМПЛЕКСНОЕ ДЕЙСТВИЕ: НАЧИСЛИТЬ 100% И ПЕРЕВЕСТИ НА 2-Й КОРПУС -->
+            <button onclick="triggerCompensateAndReroute()" class="bg-gradient-to-r from-amber-500 via-orange-600 to-red-600 hover:from-amber-400 hover:to-red-500 active:scale-[0.98] text-white text-xs font-extrabold px-3.5 py-1.5 rounded-xl shadow-md transition-all flex items-center space-x-1.5 border border-amber-300/40">
+              <i class="fa-solid fa-bolt text-yellow-200"></i>
+              <span>Начислить 100% и перевести на 2-й корпус</span>
+            </button>
+
+            <!-- ТОЛЬКО ПЕРЕВОД НА РЕЗЕРВНЫЙ ТЕРМИНАЛ -->
+            <button onclick="rerouteOrder()" class="bg-stankin-lightNavy hover:bg-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>Только перевод</span>
+            </button>
+
+            <!-- ВЫЗОВ ДЕЖУРНОГО СПЕЦИАЛИСТА ПЛОЩАДКИ -->
+            <button onclick="callTechnician()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-wrench text-amber-400"></i>
+              <span>Вызов дежурного</span>
+            </button>
+
+            <!-- ЗАКРЫТИЕ ТИКЕТА -->
+            <button onclick="resolveCurrentTicket()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1 ml-auto">
+              <i class="fa-solid fa-check"></i>
+              <span>Решено</span>
+            </button>
+          </div>
+
+          <!-- Окно сообщений (Чат-мессенджер) -->
+          <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/70">
+            <div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+              <i class="fa-regular fa-comment-dots text-4xl mb-2 text-slate-300"></i>
+              <p>Загрузка переписки по обращению...</p>
+            </div>
+          </div>
+
+          <!-- Поле ввода ответа диспетчера -->
+          <div id="chatInputArea" class="p-3 border-t border-slate-200 bg-white">
+            
+            <!-- Быстрые шаблоны ответов -->
+            <div class="flex items-center space-x-2 mb-2 overflow-x-auto pb-1 text-[11px]">
+              <span class="text-slate-400 font-semibold">Шаблоны:</span>
+              <button onclick="insertTemplate(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors">
+                🔄 Заказ переведен во 2-й корпус
+              </button>
+              <button onclick="insertTemplate(2)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors">
+                💰 Бонусы зачислены в полном объеме
+              </button>
+              <button onclick="insertTemplate(3)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors">
+                🛠️ Дежурный специалист направлен к МФУ
+              </button>
+            </div>
+
+            <!-- Форма отправки сообщения -->
+            <form onsubmit="sendMessage(event)" class="flex items-center space-x-2">
+              <input type="text" id="messageInput" placeholder="Введите ответ диспетчера Цырулева А. А. для студента..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-stankin-navy">
+              <button type="submit" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow">
+                <span>Отправить</span>
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+              </button>
+            </form>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== ВКЛАДКА 3: ЖУРНАЛ ЗАКАЗОВ И ТРАНЗАКЦИЙ ==================== -->
+    <section id="tabContent-orders" class="hidden space-y-6">
+      
+      <!-- Таблица 1: История заказов -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-stankin-lightNavy"></i>
+            Реестр заданий на печать
+          </div>
+          <span class="text-xs text-slate-500">Автоматическая регистрация заказов студентов</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3">№ Заказа</th>
+                <th class="px-4 py-3">Студент</th>
+                <th class="px-4 py-3">Терминал</th>
+                <th class="px-4 py-3">Файл</th>
+                <th class="px-4 py-3 text-center">Стр.</th>
+                <th class="px-4 py-3 text-right">Стоимость</th>
+                <th class="px-4 py-3 text-center">Статус</th>
+                <th class="px-4 py-3 text-center">Код выдачи</th>
+                <th class="px-4 py-3">Время</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="9" class="p-6 text-center text-slate-400">Загрузка реестра заказов...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Таблица 2: Транзакции -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-stankin-burgundy"></i>
+            Аудиторский журнал финансовых операций
+          </div>
+          <span class="text-xs text-slate-500">Биллинг CloudPrint СТАНКИН (1 балл = 1 рубль)</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">Студент</th>
+                <th class="px-4 py-3">Тип</th>
+                <th class="px-4 py-3 text-right">Сумма</th>
+                <th class="px-4 py-3">Назначение платежа / Причина</th>
+                <th class="px-4 py-3">Дата</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTableBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="p-6 text-center text-slate-400">Загрузка финансовых операций...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== ВКЛАДКА 4: ПАСПОРТ ПРОЕКТА ==================== -->
+    <section id="tabContent-about" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 text-xs text-slate-700">
+        <h2 class="text-lg font-extrabold text-stankin-navy">
+          Локальная система облачной студенческой смарт-полиграфии МГТУ «СТАНКИН»
+        </h2>
+        <p class="text-slate-600">
+          Проект решает задачу автоматизации печати курсовых и дипломных работ студентов по ГОСТ 7.32 с оперативным диспетчерским управлением и гарантией возврата средств при аппаратных сбоях МФУ.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <div class="font-bold text-stankin-navy">Участники проекта и зоны ответственности:</div>
+            <div>• <b>Цырулев А. А.</b> — удаленный диспетчер техподдержки, валидация сбоев, компенсации, перенаправление.</div>
+            <div>• <b>Ткачук Д. В.</b> — технический администратор, системная архитектура, база данных SQLite3.</div>
+            <div>• <b>Дежурные специалисты площадок</b> — физическая загрузка бумаги (500 л) и картриджей TK-1150 на местах.</div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <div class="font-bold text-stankin-navy">Оборудование и параметры печати:</div>
+            <div>• Терминал №1: Старый корпус (STANKIN-OLD-01), холл 1 этажа.</div>
+            <div>• Терминал №2: Новый корпус (STANKIN-NEW-01), коворкинг 2 этажа.</div>
+            <div>• Лазерные МФУ А4, тонер-картриджи Kyocera TK-1150 (3000 стр., k=1).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== ПЛАВАЮЩИЙ ИНТЕРАКТИВНЫЙ СТЕНД (DEMO MODE DOCK BAR) ==================== -->
+  <div id="demoDockBar" class="fixed bottom-4 right-4 z-40 bg-stankin-deep/95 backdrop-blur-md text-white border-2 border-amber-400/70 p-3 rounded-2xl shadow-2xl transition-all duration-300 max-w-xl">
+    
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <div class="flex items-center space-x-2">
+        <span class="flex h-2.5 w-2.5 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+        </span>
+        <span class="text-xs uppercase font-extrabold tracking-wider text-amber-300 flex items-center gap-1">
+          <i class="fa-solid fa-flask"></i> Стенд симуляции (Demo Mode)
+        </span>
+      </div>
+
+      <div class="flex items-center space-x-1">
+        <button onclick="toggleDemoDock()" id="btnDockToggle" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded">
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Разворачиваемое содержимое дока -->
+    <div id="demoDockContent" class="flex flex-wrap items-center gap-2 pt-1">
+      
+      <!-- Выбор терминала -->
+      <div class="flex items-center space-x-1 bg-white/10 rounded-lg p-1 border border-white/20">
+        <label for="simTerminalSelect" class="text-[11px] text-slate-300 px-1.5 font-medium">МФУ:</label>
+        <select id="simTerminalSelect" class="bg-stankin-deep text-white text-[11px] font-semibold rounded px-2 py-1 border border-slate-600 focus:outline-none">
+          <option value="1">№1: Старый корпус</option>
+          <option value="2">№2: Новый корпус</option>
+        </select>
+      </div>
+
+      <!-- Кнопка 1: Печать 20 стр -->
+      <button onclick="triggerSimulatePrint()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1 shadow-sm">
+        <i class="fa-solid fa-print"></i>
+        <span>Печать 20 стр</span>
+      </button>
+
+      <!-- Кнопка 2: Замятие E-04 -->
+      <button onclick="triggerSimulateJam()" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1 shadow-sm">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Замятие E-04</span>
+      </button>
+
+      <!-- Кнопка 3: Сброс -->
+      <button onclick="triggerResetDemo()" title="Сбросить стенд к исходным демо-данным" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Сброс</span>
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: НАЧИСЛЕНИЕ КОМПЕНСАЦИИ ==================== -->
+  <div id="compensationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-stankin-navy flex items-center gap-2">
+          <i class="fa-solid fa-coins text-stankin-burgundy"></i>
+          Начисление компенсации студенту
+        </h3>
+        <button onclick="closeCompensationModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-600">
+        <p>Студент: <b id="modalStudentName" class="text-slate-800">Иванов М. В. (ИДБ-25-15)</b></p>
+        <p>Заказ: <b id="modalOrderInfo" class="text-slate-800">ORD-78129 (стоимость: 225.00 руб.)</b></p>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Сумма компенсации (баллов / рублей):</label>
+          <div class="relative">
+            <input type="number" id="modalCompensationAmount" value="225" min="1" step="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg py-2 px-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-stankin-navy">
+            <span class="absolute right-3 top-2 font-bold text-slate-400">₽</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <span class="text-slate-400 text-[11px]">Быстрый выбор:</span>
+          <button type="button" onclick="setCompAmount(60)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded font-semibold text-[11px]">60 ₽</button>
+          <button type="button" onclick="setCompAmount(100)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded font-semibold text-[11px]">100 ₽</button>
+          <button type="button" onclick="setCompAmount(225)" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-stankin-burgundy rounded font-bold text-[11px]">225 ₽</button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeCompensationModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">
+          Отмена
+        </button>
+        <button type="button" onclick="submitCompensation()" class="px-4 py-2 rounded-lg text-xs font-bold bg-stankin-burgundy hover:bg-red-700 text-white shadow-sm flex items-center space-x-1.5">
+          <i class="fa-solid fa-check"></i>
+          <span>Одобрить и начислить</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ТОСТЫ УВЕДОМЛЕНИЙ -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT ДАШБОРДА -->
+  <script>
+    let currentTab = 'monitoring';
+    let currentTicketId = 1;
+    let currentTicketFilter = 'all';
+    let terminalsCache = [];
+    let ticketsCache = [];
+    let isUserTyping = false;
+    let isDockCollapsed = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const msgInput = document.getElementById('messageInput');
+      if (msgInput) {
+        msgInput.addEventListener('focus', () => { isUserTyping = true; });
+        msgInput.addEventListener('blur', () => { isUserTyping = false; });
+      }
+
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      fetchDashboardData();
+      setInterval(fetchDashboardData, 3000);
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      const str = now.toLocaleDateString('ru-RU', options).replace(',', '');
+      const clockEl = document.getElementById('liveClock');
+      if (clockEl) clockEl.innerText = str;
+    }
+
+    function toggleDemoDock() {
+      const content = document.getElementById('demoDockContent');
+      const btn = document.getElementById('btnDockToggle');
+      isDockCollapsed = !isDockCollapsed;
+      if (isDockCollapsed) {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+      } else {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+      }
+    }
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      ['monitoring', 'support', 'orders', 'about'].forEach(t => {
+        const content = document.getElementById(`tabContent-${t}`);
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (t === tabName) {
+          if (content) content.classList.remove('hidden');
+          if (btn) {
+            btn.classList.add('text-stankin-navy', 'border-stankin-navy', 'font-bold');
+            btn.classList.remove('text-slate-500', 'border-transparent', 'font-semibold');
+          }
+        } else {
+          if (content) content.classList.add('hidden');
+          if (btn) {
+            btn.classList.remove('text-stankin-navy', 'border-stankin-navy', 'font-bold');
+            btn.classList.add('text-slate-500', 'border-transparent', 'font-semibold');
+          }
+        }
+      });
+
+      if (tabName === 'orders') {
+        loadOrdersAndTransactions();
+      }
+    }
+
+    async function fetchDashboardData() {
+      try {
+        const [statsRes, termsRes, ticketsRes] = await Promise.all([
+          fetch('/api/stats'),
+          fetch('/api/terminals'),
+          fetch('/api/tickets')
+        ]);
+
+        if (statsRes.ok) renderStats(await statsRes.json());
+        if (termsRes.ok) {
+          terminalsCache = await termsRes.json();
+          renderTerminals(terminalsCache);
+        }
+        if (ticketsRes.ok) {
+          ticketsCache = await ticketsRes.json();
+          renderTicketsList(ticketsCache);
+        }
+
+        if (currentTicketId) {
+          const ticketRes = await fetch(`/api/tickets/${currentTicketId}`);
+          if (ticketRes.ok) {
+            renderActiveTicket(await ticketRes.json());
+          }
+        }
+
+        if (currentTab === 'orders') {
+          loadOrdersAndTransactions();
+        }
+      } catch (err) {
+        console.warn('API sync warn:', err);
+      }
+    }
+
+    function renderStats(stats) {
+      document.getElementById('kpiTotalTerminals').innerText = stats.total_terminals;
+      document.getElementById('kpiOnlineTerminals').innerText = stats.online_terminals;
+      document.getElementById('kpiErrorTerminals').innerText = stats.error_terminals;
+      document.getElementById('kpiActiveTickets').innerText = stats.active_tickets;
+      document.getElementById('kpiTotalPages').innerText = stats.total_printed_pages.toLocaleString('ru-RU');
+      document.getElementById('kpiTotalCompensation').innerText = stats.total_compensation_rub.toFixed(2);
+      
+      const badge = document.getElementById('ticketsBadge');
+      if (badge) badge.innerText = stats.active_tickets;
+    }
+
+    // ДИНАМИЧЕСКИЙ ЦВЕТ ПРОГРЕСС-БАРОВ: Зеленый > 50%, Желтый < 50%, Красный < 15%
+    function getGaugeColor(percent) {
+      if (percent > 50) return 'bg-emerald-500';
+      if (percent >= 15) return 'bg-amber-500';
+      return 'bg-red-500';
+    }
+
+    function renderTerminals(terminals) {
+      const container = document.getElementById('terminalsGrid');
+      if (!container) return;
+
+      container.innerHTML = terminals.map(t => {
+        const isError = t.status === 'Замятие E-04';
+        const isMaintenance = t.status === 'Ожидает ТО';
+
+        let statusBadge = '';
+        if (isError) {
+          statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-700 border border-red-300 animate-alarm">
+            <i class="fa-solid fa-triangle-exclamation mr-1.5 text-red-600"></i> ЗАМЯТИЕ E-04
+          </span>`;
+        } else if (isMaintenance) {
+          statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-300">
+            <i class="fa-solid fa-wrench mr-1.5 text-purple-600"></i> ОЖИДАЕТ ТО
+          </span>`;
+        } else {
+          statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> ОНЛАЙН
+          </span>`;
+        }
+
+        const paperBarClass = getGaugeColor(t.paper_percent);
+        const tonerBarClass = getGaugeColor(t.toner_percent);
+
+        return `
+          <div class="bg-white rounded-2xl border ${isError ? 'border-red-400 ring-2 ring-red-200' : 'border-slate-200'} p-5 shadow-sm flex flex-col justify-between transition-all">
+            
+            <div>
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300">${t.code}</span>
+                    <span class="text-xs font-semibold text-slate-500">${t.campus}</span>
+                  </div>
+                  <h3 class="text-base font-extrabold text-stankin-navy mt-1">${t.name}</h3>
+                  <p class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                    ${t.location}
+                  </p>
+                </div>
+                <div>${statusBadge}</div>
+              </div>
+
+              <div class="border-t border-slate-100 my-4"></div>
+
+              <!-- Шкалы с динамическим цветовым кодированием -->
+              <div class="space-y-4 text-xs">
+                
+                <!-- Бумага -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div class="flex justify-between items-center mb-1.5">
+                    <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                      <i class="fa-solid fa-layer-group text-stankin-lightNavy"></i> Бумажный лоток:
+                    </span>
+                    <span class="font-mono font-bold text-slate-800">${t.paper_sheets} / ${t.paper_max} л. (${t.paper_percent}%)</span>
+                  </div>
+                  <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div class="${paperBarClass} h-3 rounded-full transition-all duration-500" style="width: ${t.paper_percent}%"></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                    <span>Минимум: 0</span>
+                    <span>Максимум: 500 листов</span>
+                  </div>
+                </div>
+
+                <!-- Тонер картриджа TK-1150 -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div class="flex justify-between items-center mb-1.5">
+                    <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                      <i class="fa-solid fa-fill-drip text-stankin-burgundy"></i> Тонер (TK-1150):
+                    </span>
+                    <span class="font-mono font-bold text-slate-800">R_toner = ${t.toner_percent}% (~${t.toner_pages_left} стр.)</span>
+                  </div>
+                  <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div class="${tonerBarClass} h-3 rounded-full transition-all duration-500" style="width: ${t.toner_percent}%"></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                    <span>На картридже: ${t.toner_printed_pages} стр.</span>
+                    <span>Ресурс: ${t.cartridge_nominal} стр.</span>
+                  </div>
+                </div>
+
+                <!-- Метаданные МФУ -->
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-500 pt-1">
+                  <div>
+                    <span class="text-slate-400">IP-адрес:</span>
+                    <span class="font-mono font-semibold text-slate-700 block">${t.ip_address}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-400">Всего отпечатано:</span>
+                    <span class="font-mono font-semibold text-slate-700 block">${t.total_printed_pages.toLocaleString('ru-RU')} стр.</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Пульт дежурного специалиста -->
+            <div class="mt-4 pt-3.5 border-t border-slate-100">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <i class="fa-solid fa-user-gear"></i> Пульт дежурного инженера:
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="terminalAction(${t.id}, 'refill-paper')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 px-2 rounded-xl transition-colors flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-plus text-stankin-lightNavy"></i>
+                  <span>Бумага (+500)</span>
+                </button>
+                <button onclick="terminalAction(${t.id}, 'replace-cartridge')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 px-2 rounded-xl transition-colors flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-rotate text-stankin-burgundy"></i>
+                  <span>Сменить тонер</span>
+                </button>
+                <button onclick="terminalAction(${t.id}, 'clear-jam')" class="${isError ? 'bg-red-600 hover:bg-red-500 text-white font-bold animate-bounce' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold'} text-xs py-2 px-2 rounded-xl transition-colors flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-wrench"></i>
+                  <span>Сброс E-04</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTicketsList(tickets) {
+      const container = document.getElementById('ticketsList');
+      if (!container) return;
+
+      let filtered = tickets;
+      if (currentTicketFilter === 'active') filtered = tickets.filter(t => t.status !== 'Решен');
+      if (currentTicketFilter === 'resolved') filtered = tickets.filter(t => t.status === 'Решен');
+
+      document.getElementById('ticketsCountLabel').innerText = `${filtered.length} тикет(ов)`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs">Нет обращений</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const isSelected = t.id === currentTicketId;
+        const isResolved = t.status === 'Решен';
+
+        return `
+          <div onclick="selectTicket(${t.id})" class="p-3 rounded-xl cursor-pointer transition-all border ${isSelected ? 'bg-blue-50/70 border-stankin-navy ring-1 ring-stankin-navy' : 'bg-white hover:bg-slate-50 border-slate-200'}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-mono font-extrabold text-xs text-stankin-navy">${t.ticket_number}</span>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${isResolved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${t.status}</span>
+            </div>
+            <div class="font-bold text-xs text-slate-800 truncate">${t.user_name}</div>
+            <div class="text-[10px] text-slate-500">${t.user_group} • Заказ ${t.order_code || '—'}</div>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700">${t.issue_type}</span>
+              ${t.compensation_rub > 0 ? `<span class="text-[10px] font-bold text-stankin-burgundy">+${t.compensation_rub} ₽</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterTickets(type) {
+      currentTicketFilter = type;
+      ['all', 'active', 'resolved'].forEach(f => {
+        const btn = document.getElementById(`filterBtn-${f}`);
+        if (btn) {
+          btn.className = f === type 
+            ? 'px-2.5 py-1 rounded-lg font-bold bg-stankin-navy text-white text-[11px]'
+            : 'px-2.5 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 text-[11px]';
+        }
+      });
+      renderTicketsList(ticketsCache);
+    }
+
+    function selectTicket(id) {
+      currentTicketId = id;
+      renderTicketsList(ticketsCache);
+      fetch(`/api/tickets/${id}`).then(r => r.json()).then(renderActiveTicket);
+    }
+
+    // МЕССЕНДЖЕР-СТИЛЬ ОТРИСОВКИ ЧАТА
+    function renderActiveTicket(ticket) {
+      if (!ticket) return;
+
+      document.getElementById('selectedTicketStudentName').innerText = `${ticket.user_name} (${ticket.ticket_number})`;
+      document.getElementById('selectedTicketStudentInfo').innerText = 
+        `Группа: ${ticket.user_group} • Билет: ${ticket.student_card} • Площадка: ${ticket.terminal_name}`;
+      
+      const badge = document.getElementById('selectedTicketStatusBadge');
+      badge.innerText = ticket.status;
+      badge.className = ticket.status === 'Решен' 
+        ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
+        : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700';
+
+      document.getElementById('selectedTicketUserBalance').innerText = `${ticket.balance_rub.toFixed(2)} ₽`;
+      document.getElementById('selectedTicketOrderCode').innerText = ticket.order_code ? `${ticket.order_code} (${ticket.page_count} стр., ${ticket.price_rub} ₽)` : 'Нет заказа';
+
+      const barCostEl = document.getElementById('actionBarCompCost');
+      if (barCostEl) {
+        barCostEl.innerText = ticket.price_rub ? `${Number(ticket.price_rub).toFixed(2)} ₽` : '60.00 ₽';
+      }
+
+      const chatContainer = document.getElementById('chatMessages');
+      if (!chatContainer) return;
+
+      if (!ticket.messages || ticket.messages.length === 0) {
+        chatContainer.innerHTML = '<div class="text-center text-slate-400 text-xs p-4">Нет сообщений</div>';
+        return;
+      }
+
+      chatContainer.innerHTML = ticket.messages.map(m => {
+        if (m.sender_type === 'system') {
+          return `
+            <div class="flex justify-center my-2">
+              <div class="bg-amber-50 border border-amber-200 text-amber-900 text-[11px] px-3.5 py-2 rounded-2xl max-w-lg shadow-sm text-center">
+                <div class="font-bold flex items-center justify-center gap-1 mb-0.5">
+                  <i class="fa-solid fa-shield-halved text-amber-600"></i> ${m.sender_name}
+                </div>
+                <div class="whitespace-pre-line text-[11px]">${m.message}</div>
+                <div class="text-[9px] text-amber-700/70 mt-1">${m.created_at}</div>
+              </div>
+            </div>
+          `;
+        } else if (m.sender_type === 'dispatcher') {
+          return `
+            <div class="flex justify-end">
+              <div class="bg-stankin-navy text-white text-xs rounded-2xl rounded-tr-none px-4 py-2.5 max-w-md shadow-sm space-y-1">
+                <div class="font-bold text-[10px] text-amber-300 flex items-center justify-between">
+                  <span>${m.sender_name}</span>
+                  <i class="fa-solid fa-headset ml-2"></i>
+                </div>
+                <div class="whitespace-pre-line text-slate-100">${m.message}</div>
+                <div class="text-[9px] text-slate-300 text-right">${m.created_at}</div>
+              </div>
+            </div>
+          `;
+        } else {
+          // student
+          return `
+            <div class="flex justify-start">
+              <div class="bg-white border border-slate-200 text-slate-800 text-xs rounded-2xl rounded-tl-none px-4 py-2.5 max-w-md shadow-sm space-y-1">
+                <div class="font-bold text-[10px] text-stankin-lightNavy flex items-center justify-between">
+                  <span>${m.sender_name}</span>
+                  <i class="fa-solid fa-user-graduate text-slate-400 ml-2"></i>
+                </div>
+                <div class="whitespace-pre-line text-slate-700">${m.message}</div>
+                <div class="text-[9px] text-slate-400 text-right">${m.created_at}</div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      if (!isUserTyping) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+
+    // ДЕЙСТВИЯ ДИСПЕТЧЕРА
+    // 1. НАЧИСЛЕНИЕ 100% КОМПЕНСАЦИИ БЕЗ РУЧНОГО ВВОДА (БАГ 1)
+    async function triggerCompensate100() {
+      if (!currentTicketId) return;
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/compensate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast(`💰 Начислена 100% компенсация (${data.compensation_added.toFixed(2)} ₽) на баланс студента!`, 'success');
+        } else {
+          const err = await res.json();
+          showToast(err.detail || 'Ошибка при начислении компенсации', 'error');
+        }
+      } catch (err) {
+        showToast('Ошибка при начислении компенсации', 'error');
+      }
+    }
+
+    // 2. КОМПЛЕКСНОЕ ДЕЙСТВИЕ В ОДИН КЛИК: 100% И ПЕРЕВОД
+    async function triggerCompensateAndReroute() {
+      if (!currentTicketId) return;
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/compensate-and-reroute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast('⚡ Бонусы начислены и заказ переведен на 2-й корпус!', 'success');
+        }
+      } catch (e) {
+        showToast('Ошибка при выполнении комплексного действия', 'error');
+      }
+    }
+
+    function openCompensationModal() {
+      if (!currentTicketId) return;
+      const t = ticketsCache.find(x => x.id === currentTicketId);
+      if (t) {
+        document.getElementById('modalStudentName').innerText = `${t.user_name} (${t.user_group})`;
+        document.getElementById('modalOrderInfo').innerText = t.order_code ? `${t.order_code} (${t.price_rub} руб.)` : 'Заказ не привязан';
+        document.getElementById('modalCompensationAmount').value = t.price_rub || 225;
+      }
+      document.getElementById('compensationModal').classList.remove('hidden');
+    }
+
+    function closeCompensationModal() {
+      document.getElementById('compensationModal').classList.add('hidden');
+    }
+
+    function setCompAmount(val) {
+      document.getElementById('modalCompensationAmount').value = val;
+    }
+
+    async function submitCompensation() {
+      const amount = parseFloat(document.getElementById('modalCompensationAmount').value);
+      if (isNaN(amount) || amount <= 0) return;
+
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/compensate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount_rub: amount, dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          closeCompensationModal();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast(`Компенсация ${amount.toFixed(2)} ₽ начислена!`, 'success');
+        }
+      } catch (err) {
+        showToast('Ошибка при начислении компенсации', 'error');
+      }
+    }
+
+    async function rerouteOrder() {
+      if (!currentTicketId) return;
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/reroute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast('Заказ переведен на 2-й корпус! Выдан новый код.', 'success');
+        }
+      } catch (err) {
+        showToast('Ошибка при перенаправлении заказа', 'error');
+      }
+    }
+
+    async function callTechnician() {
+      if (!currentTicketId) return;
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/call-technician`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast('Дежурный специалист вызван к терминалу (Ожидает ТО)', 'warning');
+        }
+      } catch (err) {
+        showToast('Ошибка при вызове дежурного', 'error');
+      }
+    }
+
+    async function resolveCurrentTicket() {
+      if (!currentTicketId) return;
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dispatcher_name: 'Цырулев А. А.' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+          fetchDashboardData();
+          showToast('Тикет помечен как решенный!', 'success');
+        }
+      } catch (err) {
+        showToast('Ошибка закрытия тикета', 'error');
+      }
+    }
+
+    async function sendMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text || !currentTicketId) return;
+
+      try {
+        const res = await fetch(`/api/tickets/${currentTicketId}/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sender_name: 'Цырулев А. А. (Диспетчер)' })
+        });
+        if (res.ok) {
+          input.value = '';
+          const data = await res.json();
+          renderActiveTicket(data.ticket);
+        }
+      } catch (err) {
+        showToast('Ошибка отправки сообщения', 'error');
+      }
+    }
+
+    function insertTemplate(idx) {
+      const input = document.getElementById('messageInput');
+      if (idx === 1) input.value = "Здравствуйте! Ваш заказ успешно переведен на Терминал №2 (Новый корпус). Вы можете забрать его по коду получения.";
+      if (idx === 2) input.value = "Здравствуйте! Средства за печать возвращены бонусными баллами на ваш баланс. Приносим извинения за сбой!";
+      if (idx === 3) input.value = "Дежурный специалист площадки направлен к МФУ для устранения замятия бумаги.";
+      input.focus();
+    }
+
+    // ДЕЙСТВИЯ ПО ТЕРМИНАЛАМ
+    async function terminalAction(terminalId, action) {
+      try {
+        const res = await fetch(`/api/terminals/${terminalId}/${action}`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          fetchDashboardData();
+          showToast(data.message, 'success');
+        }
+      } catch (err) {
+        showToast('Ошибка операции', 'error');
+      }
+    }
+
+    // СИМУЛЯЦИЯ (DEMO MODE)
+    async function triggerSimulatePrint() {
+      const select = document.getElementById('simTerminalSelect');
+      const terminalId = parseInt(select.value);
+
+      try {
+        const res = await fetch('/api/simulate/print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ terminal_id: terminalId, pages: 20 })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          fetchDashboardData();
+          showToast(`Печать 20 стр. на ${data.terminal.name}: бумага -20л, тонер пересчитан!`, 'success');
+        } else {
+          showToast(data.detail || 'Печать невозможна: терминал заблокирован!', 'error');
+        }
+      } catch (err) {
+        showToast('Ошибка симуляции печати', 'error');
+      }
+    }
+
+    async function triggerSimulateJam() {
+      const select = document.getElementById('simTerminalSelect');
+      const terminalId = parseInt(select.value);
+
+      try {
+        const res = await fetch('/api/simulate/jam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ terminal_id: terminalId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          await fetchDashboardData();
+          currentTicketId = data.result.ticket_id;
+          switchTab('support');
+          showToast(`⚠️ Смоделирована авария E-04 на ${data.result.terminal.code}!`, 'error');
+        }
+      } catch (err) {
+        showToast('Ошибка симуляции замятия', 'error');
+      }
+    }
+
+    async function triggerResetDemo() {
+      if (!confirm('Сбросить базу данных к эталонным демо-данным?')) return;
+      try {
+        const res = await fetch('/api/reset-demo', { method: 'POST' });
+        if (res.ok) {
+          currentTicketId = 1;
+          await fetchDashboardData();
+          switchTab('monitoring');
+          showToast('База данных возвращена в исходное состояние!', 'success');
+        }
+      } catch (err) {
+        showToast('Ошибка сброса', 'error');
+      }
+    }
+
+    async function loadOrdersAndTransactions() {
+      try {
+        const [ordersRes, txRes] = await Promise.all([fetch('/api/orders'), fetch('/api/transactions')]);
+        if (ordersRes.ok) {
+          const orders = await ordersRes.json();
+          const tbody = document.getElementById('ordersTableBody');
+          if (tbody) {
+            tbody.innerHTML = orders.map(o => `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 font-mono font-bold text-stankin-navy">${o.order_code}</td>
+                <td class="px-4 py-3 font-medium text-slate-800">${o.user_name}</td>
+                <td class="px-4 py-3">${o.terminal_code}</td>
+                <td class="px-4 py-3 truncate max-w-xs">${o.file_name}</td>
+                <td class="px-4 py-3 text-center font-bold">${o.page_count}</td>
+                <td class="px-4 py-3 text-right font-bold">${o.price_rub.toFixed(2)} ₽</td>
+                <td class="px-4 py-3 text-center">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'Ошибка печати' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${o.status}</span>
+                </td>
+                <td class="px-4 py-3 text-center font-mono font-bold text-stankin-burgundy">${o.pickup_code || '—'}</td>
+                <td class="px-4 py-3 text-slate-400 text-[11px]">${o.created_at}</td>
+              </tr>
+            `).join('');
+          }
+        }
+
+        if (txRes.ok) {
+          const txs = await txRes.json();
+          const tbody = document.getElementById('transactionsTableBody');
+          if (tbody) {
+            tbody.innerHTML = txs.map(t => `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 font-mono text-slate-400">#${t.id}</td>
+                <td class="px-4 py-3 font-medium text-slate-800">${t.user_name}</td>
+                <td class="px-4 py-3 font-semibold">${t.transaction_type}</td>
+                <td class="px-4 py-3 text-right font-mono ${t.transaction_type === 'Компенсация' ? 'text-stankin-burgundy font-bold' : (t.amount_rub < 0 ? 'text-slate-700' : 'text-emerald-600 font-bold')}">${t.amount_rub > 0 ? '+' : ''}${t.amount_rub.toFixed(2)} ₽</td>
+                <td class="px-4 py-3 text-slate-600">${t.description}</td>
+                <td class="px-4 py-3 text-slate-400 text-[11px]">${t.created_at}</td>
+              </tr>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Ошибка загрузки журналов:', e);
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold text-white transition-all transform duration-300 translate-y-2 opacity-0 max-w-sm';
+
+      if (type === 'error') {
+        toast.classList.add('bg-stankin-burgundy', 'border', 'border-red-400');
+        toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-base"></i><span>${message}</span>`;
+      } else if (type === 'success') {
+        toast.classList.add('bg-emerald-600', 'border', 'border-emerald-400');
+        toast.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${message}</span>`;
+      } else if (type === 'warning') {
+        toast.classList.add('bg-amber-600', 'border', 'border-amber-400');
+        toast.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-base"></i><span>${message}</span>`;
+      } else {
+        toast.classList.add('bg-stankin-navy', 'border', 'border-blue-400');
+        toast.innerHTML = `<i class="fa-solid fa-circle-info text-base"></i><span>${message}</span>`;
+      }
+
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 20);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+  </script>
+
+</body>
+</html>

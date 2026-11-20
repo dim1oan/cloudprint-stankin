@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPrint СТАНКИН — Мобильный сервис студента</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            stankin: {
+              navy: '#1B365D',
+              deep: '#0D2040',
+              lightNavy: '#254E86',
+              crimson: '#8B0000',
+              burgundy: '#7A0C1E',
+              accentRed: '#BA1B1D',
+              gold: '#D97706',
+              surface: '#F8FAFC',
+              card: '#FFFFFF'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .phone-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .phone-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.9; }
+    }
+    .animate-subtle {
+      animation: pulse-subtle 2.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-stankin-navy selection:text-white">
+
+  <!-- ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ДЛЯ ДЕМОНСТРАЦИИ (ВНЕ ТЕЛЕФОНА) -->
+  <div class="w-full max-w-md flex items-center justify-between mb-3 text-xs px-2 text-slate-400">
+    <div class="flex items-center space-x-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="font-medium text-slate-300">Режим: Студент (Mobile Web App)</span>
+    </div>
+    <a href="/" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-semibold px-3 py-1.5 rounded-lg border border-blue-400/30 transition-all flex items-center space-x-1.5 shadow-md">
+      <i class="fa-solid fa-desktop text-blue-300"></i>
+      <span>Панель администратора →</span>
+    </a>
+  </div>
+
+  <!-- КОРПУС СМАРТФОНА (DEVICE FRAME) -->
+  <div class="w-full max-w-sm sm:max-w-md bg-slate-800 rounded-[2.5rem] p-3 shadow-2xl border-4 border-slate-700 relative">
+    
+    <!-- ЭКРАН ТЕЛЕФОНА -->
+    <div class="bg-slate-50 rounded-[2rem] overflow-hidden flex flex-col h-[740px] relative shadow-inner">
+      
+      <!-- СТАТУС-БАР СМАРТФОНА -->
+      <div class="bg-stankin-deep text-white px-5 pt-3 pb-2 flex items-center justify-between text-[11px] font-medium tracking-tight select-none">
+        <span id="phoneClock" class="font-bold">13:20</span>
+        <!-- Динамический вырез (Dynamic Island) -->
+        <div class="w-20 h-4 bg-black rounded-full mx-auto flex items-center justify-center">
+          <div class="w-2 h-2 rounded-full bg-slate-800 mr-2"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-blue-950"></div>
+        </div>
+        <div class="flex items-center space-x-1.5 text-slate-300 text-[10px]">
+          <i class="fa-solid fa-signal"></i>
+          <i class="fa-solid fa-wifi"></i>
+          <i class="fa-solid fa-battery-full text-emerald-400"></i>
+        </div>
+      </div>
+
+      <!-- ВНУТРЕННЯЯ ШАПКА ПРИЛОЖЕНИЯ CLOUDPRINT -->
+      <header class="bg-stankin-navy text-white px-4 py-3 shadow-md border-b border-blue-900/40">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-stankin-burgundy flex items-center justify-center font-bold text-white shadow-sm border border-red-400/30 text-sm">
+              <i class="fa-solid fa-print"></i>
+            </div>
+            <div>
+              <div class="text-sm font-extrabold tracking-tight leading-none text-white">CloudPrint <span class="text-red-400">СТАНКИН</span></div>
+              <div class="text-[10px] text-slate-300 mt-0.5">Смарт-полиграфия</div>
+            </div>
+          </div>
+          
+          <!-- Профиль студента и баланс -->
+          <div class="text-right">
+            <div class="text-[10px] text-slate-300 font-medium truncate max-w-[120px]" id="studentProfileName">Иванов М. В. (ИДБ-25-15)</div>
+            <div class="inline-flex items-center space-x-1 bg-white/10 px-2 py-0.5 rounded-full border border-white/20 mt-0.5">
+              <i class="fa-solid fa-coins text-amber-400 text-[9px]"></i>
+              <span id="studentBalanceBadge" class="text-[11px] font-bold text-amber-300">150.00 ₽</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ИНДИКАТОР ШАГОВ (ТОЛЬКО НА ВКЛАДКЕ «ПЕЧАТЬ») -->
+        <div id="printWizardSteps" class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-300">
+          <div id="stepDot-1" class="flex items-center space-x-1 font-bold text-amber-400">
+            <span class="w-4 h-4 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-[9px]">1</span>
+            <span>Файл</span>
+          </div>
+          <div class="h-0.5 w-6 bg-white/20" id="stepLine-1"></div>
+
+          <div id="stepDot-2" class="flex items-center space-x-1 text-slate-400 font-medium">
+            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">2</span>
+            <span>Параметры</span>
+          </div>
+          <div class="h-0.5 w-6 bg-white/20" id="stepLine-2"></div>
+
+          <div id="stepDot-3" class="flex items-center space-x-1 text-slate-400 font-medium">
+            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">3</span>
+            <span>Оплата</span>
+          </div>
+          <div class="h-0.5 w-6 bg-white/20" id="stepLine-3"></div>
+
+          <div id="stepDot-4" class="flex items-center space-x-1 text-slate-400 font-medium">
+            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">4</span>
+            <span>Выдача</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- КОНТЕЙНЕР ЭКРАНОВ -->
+      <main class="flex-1 overflow-y-auto p-4 phone-scroll relative">
+
+        <!-- ==================== ВКЛАДКА 1: ОФОРМЛЕНИЕ ПЕЧАТИ (VIEW-PRINT) ==================== -->
+        <div id="view-print" class="space-y-4">
+
+          <!-- ШАГ 1: ЭКРАН ПРИВЕТСТВИЯ И ЗАГРУЗКИ -->
+          <div id="stepScreen-1" class="space-y-4 pt-1">
+            <div class="text-center space-y-1">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-stankin-navy to-stankin-lightNavy text-white flex items-center justify-center text-xl shadow-lg mb-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <h2 class="text-base font-extrabold text-stankin-navy">Печать работ по ГОСТ</h2>
+              <p class="text-xs text-slate-500">Автоматический префлайт ГОСТ 7.32 и печать на МФУ университета</p>
+            </div>
+
+            <!-- Большая кнопка загрузки файла -->
+            <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-300 hover:border-stankin-lightNavy transition-colors text-center space-y-3 shadow-sm">
+              <div class="text-slate-400 text-3xl">
+                <i class="fa-regular fa-file-pdf text-red-500"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-800">Выберите документ для печати</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Форматы: PDF, DOCX (до 50 МБ)</div>
+              </div>
+              
+              <button onclick="startPreflight('Курсовой_проект_Детали_машин_Иванов.pdf', 20)" class="w-full bg-stankin-navy hover:bg-stankin-lightNavy active:bg-stankin-deep text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                <span>Загрузить документ (DOCX/PDF)</span>
+              </button>
+            </div>
+
+            <!-- Быстрые шаблоны студенческих работ -->
+            <div class="space-y-2 pt-1">
+              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Примеры учебных работ:</div>
+              
+              <div onclick="startPreflight('Курсовой_проект_Детали_машин.pdf', 20)" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-file-pdf text-red-600 text-lg"></i>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-slate-800">Курсовой_проект_Детали_машин.pdf</div>
+                    <div class="text-[10px] text-slate-400">20 страниц • А4 • 60.00 ₽</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+              </div>
+
+              <div onclick="startPreflight('Дипломный_проект_ВКР_СТАНКИН.pdf', 45)" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-file-pdf text-red-600 text-lg"></i>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-slate-800">Дипломный_проект_ВКР_СТАНКИН.pdf</div>
+                    <div class="text-[10px] text-slate-400">45 страниц • А4 • 135.00 ₽</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- ШАГ 2: НАСТРОЙКА ПЕЧАТИ (С ВАЛИДАЦИЕЙ СТАТУСА МФУ) -->
+          <div id="stepScreen-2" class="hidden space-y-4">
+            
+            <!-- Карточка выбранного документа -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div id="step2FileName" class="text-xs font-bold text-slate-800 truncate">Курсовой_проект_Детали_машин.pdf</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-2">
+                  <span id="step2PageCount">20 страниц</span>
+                  <span>•</span>
+                  <span class="text-emerald-600 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-check"></i> ГОСТ 7.32 пройден
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Предупреждающий баннер аварии МФУ -->
+            <div id="terminalWarningBanner" class="hidden p-3 rounded-2xl bg-red-50 border border-red-300 text-xs text-red-800 space-y-1">
+              <div class="font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+                Терминал временно недоступен!
+              </div>
+              <p id="terminalWarningText" class="text-[11px] text-red-700">
+                На выбранном терминале зафиксирован аппаратный сбой. Печать заблокирована. Пожалуйста, переключитесь на другой корпус!
+              </p>
+            </div>
+
+            <!-- Выбор корпуса -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-slate-700">Выберите корпус для получения:</label>
+              
+              <!-- Старый корпус -->
+              <label id="campusLabel1" class="relative flex items-center p-3 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/50 cursor-pointer transition-all shadow-sm">
+                <input type="radio" name="campusSelection" value="1" checked onchange="updateSelectedCampus(1)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
+                <div class="ml-3 flex-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-800">Старый корпус</span>
+                    <span id="termStatusBadge1" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Онлайн</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №1 • Холл 1 этажа (гардероб)</div>
+                </div>
+              </label>
+
+              <!-- Новый корпус -->
+              <label id="campusLabel2" class="relative flex items-center p-3 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/50 cursor-pointer transition-all shadow-sm">
+                <input type="radio" name="campusSelection" value="2" onchange="updateSelectedCampus(2)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
+                <div class="ml-3 flex-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-800">Новый корпус</span>
+                    <span id="termStatusBadge2" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Онлайн</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №2 • Коворкинг 2 этажа</div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Итоговая стоимость -->
+            <div class="bg-gradient-to-r from-stankin-deep to-stankin-navy text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+              <div>
+                <div class="text-[10px] text-slate-300 uppercase tracking-wider font-semibold">Итого к оплате:</div>
+                <div id="step2TotalCost" class="text-2xl font-extrabold text-amber-300">60.00 ₽</div>
+              </div>
+              <div class="text-right text-[11px] text-slate-300">
+                <div id="step2PageCountCost">20 стр. × 3.00 ₽</div>
+                <div class="text-emerald-400 font-semibold">Скидка студента 100%</div>
+              </div>
+            </div>
+
+            <!-- Кнопка перехода к оплате (блокируется при аварии) -->
+            <div class="space-y-2 pt-1">
+              <button id="btnProceedToPayment" onclick="goToStep(3)" class="w-full bg-stankin-navy hover:bg-stankin-lightNavy active:bg-stankin-deep text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                <span id="btnProceedToPaymentText">Перейти к оплате</span>
+                <i id="btnProceedToPaymentIcon" class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button onclick="goToStep(1)" class="w-full text-slate-500 hover:text-slate-800 text-xs py-1.5 font-medium transition-colors">
+                ← Выбрать другой документ
+              </button>
+            </div>
+
+          </div>
+
+          <!-- ШАГ 3: ОПЛАТА -->
+          <div id="stepScreen-3" class="hidden space-y-4">
+            
+            <div class="text-center space-y-1">
+              <div class="text-xs font-bold text-slate-500">Оформление печати</div>
+              <div id="step3CostBig" class="text-3xl font-extrabold text-stankin-navy">60.00 ₽</div>
+              <p id="step3OrderSummary" class="text-xs text-slate-500">20 страниц • Старый корпус</p>
+            </div>
+
+            <!-- Предупреждение -->
+            <div id="paymentWarningBanner" class="hidden p-3 rounded-2xl bg-red-100 border border-red-300 text-xs text-red-800 font-bold text-center">
+              <i class="fa-solid fa-ban text-red-600 mr-1"></i>
+              Выбранный терминал временно не работает. Оплата заблокирована.
+            </div>
+
+            <!-- Кнопки оплаты -->
+            <div class="space-y-3 pt-1">
+              <button id="btnPaySbp" onclick="executePayment('sbp')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 text-white p-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-between border border-emerald-400/30">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-xl font-bold shadow-sm">
+                    <i class="fa-solid fa-qrcode"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-extrabold tracking-wide">Оплатить через СБП</div>
+                    <div class="text-[10px] text-emerald-100">Система быстрых платежей • 0% комиссии</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-emerald-200"></i>
+              </button>
+
+              <button id="btnPayBonus" onclick="executePayment('bonus')" class="w-full bg-white hover:bg-slate-50 text-slate-800 p-3.5 rounded-2xl border-2 border-slate-200 shadow-sm transition-all flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shadow-sm">
+                    <i class="fa-solid fa-coins"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-extrabold">Оплатить бонусами</div>
+                    <div id="btnPayBonusSubtitle" class="text-[10px] text-slate-500">Доступно: 150.00 баллов (1 балл = 1 ₽)</div>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-stankin-navy">Списать ₽</span>
+              </button>
+            </div>
+
+            <button onclick="goToStep(2)" class="w-full text-slate-500 hover:text-slate-800 text-xs py-2 font-medium transition-colors">
+              ← Вернуться к настройкам печати
+            </button>
+
+          </div>
+
+          <!-- ШАГ 4: ЭКРАН ВЫДАЧИ ОФОРМЛЕННОГО ЗАКАЗА -->
+          <div id="stepScreen-4" class="hidden space-y-4">
+            
+            <!-- Баннер перевода заказа -->
+            <div id="reroutedOrderBanner" class="hidden bg-gradient-to-r from-amber-500 to-red-600 text-white p-3.5 rounded-2xl shadow-md text-xs space-y-1 animate-subtle">
+              <div class="font-extrabold flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-share-nodes text-yellow-200"></i>
+                Заказ переведен на 2-й корпус!
+              </div>
+              <p id="reroutedOrderBannerText" class="text-[11px] text-amber-100">
+                Диспетчер перенаправил ваш заказ во 2-й корпус. Заберите распечатку по новому коду!
+              </p>
+            </div>
+
+            <!-- Плашка готовности -->
+            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                <i class="fa-solid fa-check"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-emerald-800">Заказ готов к выдаче!</div>
+                <div id="pickupCampusLabel" class="text-[10px] text-emerald-700 font-semibold">Старый корпус (Терминал №1)</div>
+                <div id="pickupLocationLabel" class="text-[9px] text-slate-500">Холл 1 этажа (рядом с гардеробом)</div>
+              </div>
+            </div>
+
+            <!-- Блок с крупным QR-кодом и цифровым кодом -->
+            <div class="bg-white p-5 rounded-3xl border-2 border-slate-200 shadow-md text-center space-y-3">
+              
+              <!-- Крупный QR-код -->
+              <div class="w-44 h-44 mx-auto bg-slate-900 p-2.5 rounded-2xl shadow-inner flex items-center justify-center relative">
+                <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
+                  <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+                  <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+                  <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
+
+                  <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+                  <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+                  <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
+
+                  <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
+                  <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
+                  <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
+
+                  <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
+                  <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
+                  <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
+                  <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
+                  <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
+
+                  <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
+                  <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
+                  <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
+                  <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
+                  <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
+                  <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
+                  <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
+
+                  <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
+                  <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
+                  <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
+                  <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
+                  <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
+                  <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
+                  <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
+                </svg>
+
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div class="w-8 h-8 rounded-lg bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-xs font-black shadow">
+                    СТ
+                  </div>
+                </div>
+              </div>
+
+              <!-- Цифровой номер заказа -->
+              <div>
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Цифровой код получения:</div>
+                <div id="pickupCodeDisplay" class="text-3xl font-mono font-extrabold text-stankin-navy tracking-widest my-1">
+                  654-321
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium">
+                  Подносите QR-код к сканеру терминала или введите номер на экране
+                </p>
+              </div>
+
+              <div class="border-t border-slate-100 pt-2 text-[10px] text-slate-400 flex justify-between">
+                <span id="pickupOrderCodeLabel">Заказ: ORD-78129</span>
+                <span>Срок действия: 24 часа</span>
+              </div>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="space-y-2">
+              <button onclick="openSupportWithCurrentOrder()" class="w-full bg-red-50 hover:bg-red-100 text-stankin-burgundy border border-red-300 font-bold text-xs py-3 px-4 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-sm">
+                <i class="fa-solid fa-headset text-red-600"></i>
+                <span>Проблема с этим заказом? В поддержку</span>
+              </button>
+
+              <button onclick="goToStep(1)" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-semibold transition-colors">
+                + Распечатать еще один документ
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================== ВКЛАДКА 2: МОИ ЗАКАЗЫ (VIEW-ORDERS) ==================== -->
+        <!-- БАГ 2: Полноценный список всех заказов студента с карточками и скрытием QR для завершенных -->
+        <div id="view-orders" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-extrabold text-stankin-navy">Мои заказы</h2>
+              <p class="text-[10px] text-slate-400">История и активные задания на печать</p>
+            </div>
+            <span id="studentOrdersCountBadge" class="bg-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-0.5 rounded-full">
+              Загрузка...
+            </span>
+          </div>
+
+          <!-- Контейнер карточек заказов -->
+          <div id="ordersListContainer" class="space-y-2.5">
+            <div class="p-6 text-center text-slate-400 text-xs">
+              <i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i>
+              <p>Загрузка истории заказов...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== ВКЛАДКА 3: ПОДДЕРЖКА (VIEW-SUPPORT) ==================== -->
+        <!-- БАГ 1: Обязательный выбор конкретного заказа перед подачей обращения и открытием чата -->
+        <div id="view-support" class="hidden space-y-3">
+          
+          <!-- Форма выбора заказа и подачи обращения (Шаг A) -->
+          <div id="supportOrderSelectCard" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div>
+              <h3 class="text-xs font-extrabold text-stankin-navy flex items-center gap-1.5">
+                <i class="fa-solid fa-headset text-stankin-burgundy"></i>
+                Обращение в диспетчерскую службу
+              </h3>
+              <p class="text-[10px] text-slate-500 mt-0.5">
+                Диспетчер: Цырулев А. А. • Компенсация 100% стоимости при сбое
+              </p>
+            </div>
+
+            <!-- БАГ 1: Выпадающий список выбора заказа -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-700">
+                1. Выберите проблемный заказ:
+              </label>
+              <select id="supportOrderDropdown" onchange="onSupportOrderDropdownChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-stankin-navy">
+                <option value="">Загрузка заказов...</option>
+              </select>
+            </div>
+
+            <!-- Детали выбранного заказа -->
+            <div id="supportOrderDetailsBox" class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1.5">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Документ:</span>
+                <span id="supDetFileName" class="font-bold text-slate-800 truncate max-w-[170px]">—</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Стоимость заказа:</span>
+                <span id="supDetCost" class="font-extrabold text-stankin-navy">0.00 ₽</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Площадка МФУ:</span>
+                <span id="supDetTerminal" class="font-semibold text-slate-700">—</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Статус заказа:</span>
+                <span id="supDetStatus" class="font-bold text-emerald-700">—</span>
+              </div>
+            </div>
+
+            <!-- Кнопка быстрой фиксации замятия (E-04) по выбранному заказу -->
+            <button onclick="submitReportJamWithSelectedOrder()" class="w-full bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl shadow transition-all flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+              <span>Зажевало бумагу! (Ошибка E-04)</span>
+            </button>
+
+            <!-- Кнопка просто перейти к переписке -->
+            <button onclick="openChatViewForSelectedOrder()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 rounded-xl transition-colors flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-comments"></i>
+              <span>Открыть диалог с диспетчером</span>
+            </button>
+          </div>
+
+          <!-- Блок самого чата (активируется при открытом тикете) -->
+          <div id="supportChatContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[400px]">
+            <!-- Шапка чата -->
+            <div class="bg-stankin-navy text-white p-3 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span id="chatTicketTitle">Чат по тикету</span>
+                </div>
+                <div id="chatLinkedOrderLabel" class="text-[10px] text-slate-300">Заказ: ORD-78129</div>
+              </div>
+              <button onclick="closeChatBackToSelect()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-slate-200">
+                Сменить заказ
+              </button>
+            </div>
+
+            <!-- Сообщения чата -->
+            <div id="supportChatMessagesArea" class="flex-1 p-3 overflow-y-auto space-y-2 bg-slate-50/70 text-xs">
+              <div class="text-center text-slate-400 text-xs p-4">Загрузка переписки...</div>
+            </div>
+
+            <!-- Ввод ответа студента -->
+            <form onsubmit="sendStudentSupportMessage(event)" class="p-2 border-t border-slate-200 bg-white flex items-center space-x-1.5">
+              <input type="text" id="supMessageInput" placeholder="Напишите диспетчеру Цырулеву А. А...." class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-stankin-navy">
+              <button type="submit" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white px-3 py-2 rounded-xl text-xs font-bold transition-all shadow">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- ПЛАШКА НАВИГАЦИИ СНИЗУ ТЕЛЕФОНА (3 ВКЛАДКИ) -->
+      <footer class="bg-white border-t border-slate-200 p-1.5 flex items-center justify-between text-xs text-slate-500">
+        <button onclick="switchClientNav('print')" id="clientNavBtn-print" class="flex-1 py-1 text-center font-bold text-stankin-navy flex flex-col items-center">
+          <i class="fa-solid fa-print mb-0.5 text-sm"></i>
+          <span class="text-[10px]">Печать</span>
+        </button>
+
+        <button onclick="switchClientNav('orders')" id="clientNavBtn-orders" class="flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-navy flex flex-col items-center relative">
+          <i class="fa-solid fa-receipt mb-0.5 text-sm"></i>
+          <span class="text-[10px]">Мои заказы</span>
+          <span id="navOrdersBadge" class="hidden absolute top-0 right-6 w-2 h-2 rounded-full bg-emerald-500"></span>
+        </button>
+
+        <button onclick="switchClientNav('support')" id="clientNavBtn-support" class="flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-burgundy flex flex-col items-center">
+          <i class="fa-solid fa-headset mb-0.5 text-sm"></i>
+          <span class="text-[10px]">Поддержка</span>
+        </button>
+      </footer>
+
+      <!-- HOME INDICATOR ВНИЗУ ЭКРАНА -->
+      <div class="w-32 h-1 bg-slate-300 rounded-full mx-auto my-1"></div>
+
+      <!-- ==================== МОДАЛЬНОЕ ОКНО: ПРЕФЛАЙТ ГОСТ 7.32 (ЛОАДЕР) ==================== -->
+      <div id="preflightModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-6 text-white text-center">
+        <div class="w-16 h-16 rounded-2xl bg-stankin-navy border border-blue-400/40 flex items-center justify-center text-2xl mb-4 text-amber-400 animate-spin">
+          <i class="fa-solid fa-gear"></i>
+        </div>
+        <h3 class="text-sm font-extrabold text-white">Префлайт ГОСТ 7.32...</h3>
+        <p class="text-[11px] text-slate-300 mt-1 max-w-xs">
+          Проверка полей (20-10-10-30 мм), шрифтов и ориентации листов
+        </p>
+        <div class="w-full bg-slate-700 rounded-full h-2 mt-4 overflow-hidden">
+          <div id="preflightProgressBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-2 rounded-full w-0 transition-all duration-700"></div>
+        </div>
+        <div id="preflightStatusText" class="text-[10px] text-emerald-400 font-semibold mt-2">
+          Анализ документа...
+        </div>
+      </div>
+
+      <!-- ==================== МОДАЛЬНОЕ ОКНО: ОПЛАТА СБП (ЛОАДЕР) ==================== -->
+      <div id="paymentModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-6 text-white text-center">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-600 border border-emerald-400 flex items-center justify-center text-2xl mb-4 text-white animate-pulse">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <h3 id="paymentModalTitle" class="text-sm font-extrabold text-white">Авторизация в СБП...</h3>
+        <p class="text-[11px] text-slate-300 mt-1">
+          Мгновенное подтверждение транзакции через шлюз МГТУ СТАНКИН
+        </p>
+        <div class="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mt-4"></div>
+      </div>
+
+      <!-- ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА QR-КОДА ЗАКАЗА ==================== -->
+      <div id="orderQrModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full text-center space-y-3 shadow-2xl">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <span id="qrModalOrderCode" class="text-xs font-mono font-bold text-stankin-navy">ORD-78129</span>
+            <button onclick="closeOrderQrModal()" class="text-slate-400 hover:text-slate-600 text-sm p-1">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div class="w-40 h-40 mx-auto bg-slate-900 p-2 rounded-2xl shadow-inner flex items-center justify-center relative">
+            <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
+              <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+              <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+              <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
+
+              <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+              <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+              <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
+
+              <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
+              <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
+              <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
+
+              <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
+              <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
+              <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
+              <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
+              <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
+
+              <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
+              <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
+              <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
+              <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
+              <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
+              <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
+              <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
+
+              <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
+              <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
+              <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
+              <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
+              <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
+              <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
+              <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-7 h-7 rounded-lg bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-[10px] font-black shadow">
+                СТ
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold">Пин-код выдачи:</div>
+            <div id="qrModalPickupCode" class="text-2xl font-mono font-extrabold text-stankin-navy">654-321</div>
+            <div id="qrModalCampus" class="text-[10px] text-slate-500 mt-0.5">Новый корпус (Терминал №2)</div>
+          </div>
+
+          <button onclick="closeOrderQrModal()" class="w-full bg-stankin-navy text-white text-xs py-2 rounded-xl font-bold">
+            Закрыть
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT ЛОГИКА -->
+  <script>
+    let activeClientTab = 'print'; // 'print', 'orders', 'support'
+    let currentStep = 1;
+    let selectedFile = 'Курсовой_проект_Детали_машин.pdf';
+    let selectedPages = 20;
+    let selectedTerminalId = 1;
+    let currentOrderCode = 'ORD-78129';
+    let currentPickupCode = '654-321';
+    let studentUser = { id: 1, full_name: 'Иванов М. В.', group_code: 'ИДБ-25-15', balance_rub: 150.0 };
+    let studentOrdersCache = [];
+    let terminalsCache = [];
+    let activeTicket = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updatePhoneClock();
+      setInterval(updatePhoneClock, 1000);
+
+      fetchStudentProfile();
+      fetchTerminalStatuses();
+      fetchStudentOrders();
+
+      // Опрос раз в 3 секунды
+      setInterval(() => {
+        fetchStudentProfile();
+        fetchTerminalStatuses();
+        fetchStudentOrders();
+        if (activeClientTab === 'support' && activeTicket) {
+          fetchActiveTicket();
+        }
+      }, 3000);
+    });
+
+    function updatePhoneClock() {
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const el = document.getElementById('phoneClock');
+      if (el) el.innerText = `${h}:${m}`;
+    }
+
+    // Переключение главных вкладок футера
+    function switchClientNav(tabName) {
+      activeClientTab = tabName;
+      ['print', 'orders', 'support'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`clientNavBtn-${t}`);
+        if (t === tabName) {
+          if (view) view.classList.remove('hidden');
+          if (btn) {
+            btn.className = 'flex-1 py-1 text-center font-bold text-stankin-navy flex flex-col items-center';
+          }
+        } else {
+          if (view) view.classList.add('hidden');
+          if (btn) {
+            btn.className = 'flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-navy flex flex-col items-center';
+          }
+        }
+      });
+
+      // Скрываем индикатор шагов, если не на вкладке 'print'
+      const stepsBar = document.getElementById('printWizardSteps');
+      if (stepsBar) {
+        if (tabName === 'print') stepsBar.classList.remove('hidden');
+        else stepsBar.classList.add('hidden');
+      }
+
+      if (tabName === 'orders') {
+        fetchStudentOrders();
+      }
+      if (tabName === 'support') {
+        populateSupportOrderDropdown();
+        fetchActiveTicket();
+      }
+    }
+
+    // Загрузка профиля студента
+    async function fetchStudentProfile() {
+      try {
+        const res = await fetch('/api/client/user?user_id=1');
+        if (res.ok) {
+          studentUser = await res.json();
+          document.getElementById('studentProfileName').innerText = `${studentUser.full_name} (${studentUser.group_code})`;
+          document.getElementById('studentBalanceBadge').innerText = `${studentUser.balance_rub.toFixed(2)} ₽`;
+          
+          const bonusSub = document.getElementById('btnPayBonusSubtitle');
+          if (bonusSub) {
+            bonusSub.innerText = `Доступно: ${studentUser.balance_rub.toFixed(2)} баллов (1 балл = 1 ₽)`;
+          }
+        }
+      } catch (e) {
+        console.warn('Ошибка профиля:', e);
+      }
+    }
+
+    // БАГ 2: Загрузка всех заказов студента и рендеринг вкладки «Мои заказы»
+    async function fetchStudentOrders() {
+      try {
+        const res = await fetch('/api/client/orders?user_id=1');
+        if (res.ok) {
+          const data = await res.json();
+          studentOrdersCache = data.orders || [];
+          renderStudentOrdersList(studentOrdersCache);
+          populateSupportOrderDropdown();
+          
+          // Проверяем актуальный заказ для экрана выдачи
+          if (studentOrdersCache.length > 0) {
+            const latest = studentOrdersCache[0];
+            updatePickupScreenWithOrder(latest);
+          }
+        }
+      } catch (e) {
+        console.warn('Ошибка загрузки заказов:', e);
+      }
+    }
+
+    // Рендеринг карточек заказов на вкладке «Мои заказы»
+    function renderStudentOrdersList(orders) {
+      const container = document.getElementById('ordersListContainer');
+      const badge = document.getElementById('studentOrdersCountBadge');
+      if (!container) return;
+
+      if (badge) badge.innerText = `${orders.length} заказ(ов)`;
+
+      if (orders.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-400 text-xs bg-white rounded-2xl border border-slate-200">
+            <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
+            <p>У вас пока нет оформленных заказов</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = orders.map(o => {
+        const isCompleted = o.order_status === 'Завершен';
+        const isError = o.order_status === 'Ошибка печати';
+        const isRerouted = o.order_status === 'Перенаправлен';
+        const isReady = o.order_status === 'Готов к выдаче' || o.order_status === 'В очереди';
+
+        let badgeHtml = '';
+        if (isCompleted) {
+          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">✓ Завершен</span>';
+        } else if (isError) {
+          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse">⚠️ Сбой печати (E-04)</span>';
+        } else if (isRerouted) {
+          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">🔄 Перенаправлен во 2-й корпус</span>';
+        } else {
+          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">● Готов к выдаче</span>';
+        }
+
+        // БАГ 2: Если статус 'Завершен' (COMPLETED) — скрываем QR-код!
+        const showQrAndCode = !isCompleted;
+
+        return `
+          <div class="bg-white p-3.5 rounded-2xl border ${isError ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} shadow-sm space-y-2">
+            
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-extrabold text-xs text-stankin-navy">${o.order_code}</span>
+              ${badgeHtml}
+            </div>
+
+            <div>
+              <div class="text-xs font-bold text-slate-800 truncate">${o.file_name}</div>
+              <div class="text-[10px] text-slate-500 flex items-center justify-between mt-0.5">
+                <span>${o.terminal_campus} (${o.terminal_name})</span>
+                <span class="font-bold text-slate-700">${o.price_rub.toFixed(2)} ₽</span>
+              </div>
+              <div class="text-[9px] text-slate-400 mt-0.5">${o.created_at} • ${o.page_count} стр.</div>
+            </div>
+
+            <!-- Блок выдачи и QR (только если заказ активен, скрыт для 'Завершен') -->
+            ${showQrAndCode ? `
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                <div>
+                  <div class="text-[9px] text-slate-400 font-semibold">Пин-код выдачи:</div>
+                  <div class="font-mono font-extrabold text-stankin-navy text-sm tracking-wider">${o.pickup_code || '654-321'}</div>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <button onclick="openOrderQrModal('${o.order_code}', '${o.pickup_code || '654-321'}', '${o.terminal_campus}')" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center space-x-1">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>QR-код</span>
+                  </button>
+                  <button onclick="preselectOrderForSupport(${o.id})" title="Сообщить о сбое печати" class="bg-red-50 hover:bg-red-100 text-stankin-burgundy font-bold text-[10px] px-2 py-1.5 rounded-lg border border-red-200">
+                    <i class="fa-solid fa-headset text-red-600"></i>
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <div class="bg-slate-50 px-2.5 py-1.5 rounded-lg text-[10px] text-slate-400 flex items-center justify-between">
+                <span>Заказ выдан в МФУ</span>
+                <span class="font-semibold text-slate-500">QR-код деактивирован</span>
+              </div>
+            `}
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Обновление экрана выдачи Шага 4
+    function updatePickupScreenWithOrder(order) {
+      currentOrderCode = order.order_code;
+      currentPickupCode = order.pickup_code || currentPickupCode;
+
+      const rerouteBanner = document.getElementById('reroutedOrderBanner');
+      const rerouteText = document.getElementById('reroutedOrderBannerText');
+      const campusLabel = document.getElementById('pickupCampusLabel');
+      const locLabel = document.getElementById('pickupLocationLabel');
+      const codeDisplay = document.getElementById('pickupCodeDisplay');
+      const orderCodeLabel = document.getElementById('pickupOrderCodeLabel');
+
+      if (order.order_status === 'Перенаправлен') {
+        if (rerouteBanner) {
+          rerouteBanner.classList.remove('hidden');
+          if (rerouteText) {
+            rerouteText.innerHTML = `Заказ переведен на <b>${order.terminal_campus}</b> (${order.terminal_name})! Новый код: <span class="font-mono font-black text-white bg-black/20 px-1 rounded">${order.pickup_code}</span>`;
+          }
+        }
+        if (campusLabel) campusLabel.innerText = `${order.terminal_campus} (${order.terminal_name})`;
+        if (locLabel) locLabel.innerText = order.terminal_location;
+        if (codeDisplay && order.pickup_code) codeDisplay.innerText = order.pickup_code;
+        if (orderCodeLabel) orderCodeLabel.innerText = `Заказ: ${order.order_code} (Перенаправлен)`;
+      } else {
+        if (rerouteBanner) rerouteBanner.classList.add('hidden');
+        if (campusLabel) campusLabel.innerText = `${order.terminal_campus} (${order.terminal_name})`;
+        if (locLabel) locLabel.innerText = order.terminal_location;
+        if (codeDisplay && order.pickup_code) codeDisplay.innerText = order.pickup_code;
+        if (orderCodeLabel) orderCodeLabel.innerText = `Заказ: ${order.order_code}`;
+      }
+    }
+
+    // ==================== БАГ 1: ВЫБОР ЗАКАЗА ПЕРЕД ОБРАЩЕНИЕМ В ПОДДЕРЖКУ ====================
+    function populateSupportOrderDropdown() {
+      const select = document.getElementById('supportOrderDropdown');
+      if (!select) return;
+
+      if (studentOrdersCache.length === 0) {
+        select.innerHTML = '<option value="">Нет оформленных заказов</option>';
+        return;
+      }
+
+      const prevValue = select.value;
+      select.innerHTML = studentOrdersCache.map(o => {
+        return `<option value="${o.id}">${o.order_code} — ${o.file_name.substring(0, 24)} (${o.price_rub.toFixed(0)} ₽, ${o.terminal_campus})</option>`;
+      }).join('');
+
+      if (prevValue && studentOrdersCache.some(x => String(x.id) === prevValue)) {
+        select.value = prevValue;
+      }
+      onSupportOrderDropdownChange();
+    }
+
+    function onSupportOrderDropdownChange() {
+      const select = document.getElementById('supportOrderDropdown');
+      const orderId = parseInt(select.value);
+      const order = studentOrdersCache.find(x => x.id === orderId);
+
+      const fName = document.getElementById('supDetFileName');
+      const fCost = document.getElementById('supDetCost');
+      const fTerm = document.getElementById('supDetTerminal');
+      const fStat = document.getElementById('supDetStatus');
+
+      if (order) {
+        if (fName) fName.innerText = order.file_name;
+        if (fCost) fCost.innerText = `${order.price_rub.toFixed(2)} ₽`;
+        if (fTerm) fTerm.innerText = `${order.terminal_campus} (${order.terminal_name})`;
+        if (fStat) fStat.innerText = order.order_status;
+      }
+    }
+
+    function preselectOrderForSupport(orderId) {
+      switchClientNav('support');
+      const select = document.getElementById('supportOrderDropdown');
+      if (select) {
+        select.value = String(orderId);
+        onSupportOrderDropdownChange();
+      }
+    }
+
+    // БАГ 1: Отправка сигнала о замятии (E-04) с выбранным order_id
+    async function submitReportJamWithSelectedOrder() {
+      const select = document.getElementById('supportOrderDropdown');
+      const orderId = parseInt(select.value);
+      if (!orderId) {
+        alert('Пожалуйста, выберите заказ из списка!');
+        return;
+      }
+
+      const order = studentOrdersCache.find(x => x.id === orderId);
+
+      try {
+        const res = await fetch('/api/client/report-issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 1,
+            order_id: orderId,
+            terminal_id: order ? order.terminal_id : 1,
+            order_code: order ? order.order_code : '',
+            issue_text: 'Зажевало бумагу! Терминал издал треск и остановил печать с кодом E-04. Верните средства или переведите на 2-й корпус!'
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          activeTicket = data.ticket;
+          renderChatView(activeTicket);
+          fetchTerminalStatuses();
+          fetchStudentOrders();
+          alert('Сообщение о сбое E-04 по заказу передано диспетчеру Цырулеву А. А.!');
+        } else {
+          alert(data.detail || 'Ошибка отправки обращения');
+        }
+      } catch (e) {
+        alert('Ошибка связи с сервером');
+      }
+    }
+
+    function openChatViewForSelectedOrder() {
+      fetchActiveTicket();
+    }
+
+    function closeChatBackToSelect() {
+      activeTicket = null;
+      document.getElementById('supportChatContainer').classList.add('hidden');
+      document.getElementById('supportOrderSelectCard').classList.remove('hidden');
+    }
+
+    async function fetchActiveTicket() {
+      try {
+        const res = await fetch('/api/client/my-ticket?user_id=1');
+        if (res.ok) {
+          const data = await res.json();
+          activeTicket = data.ticket;
+          if (activeTicket) {
+            renderChatView(activeTicket);
+          }
+        }
+      } catch (e) {
+        console.warn('Ошибка тикета:', e);
+      }
+    }
+
+    function renderChatView(ticket) {
+      if (!ticket) return;
+
+      document.getElementById('supportOrderSelectCard').classList.add('hidden');
+      document.getElementById('supportChatContainer').classList.remove('hidden');
+
+      document.getElementById('chatTicketTitle').innerText = `${ticket.ticket_number} • ${ticket.status}`;
+      document.getElementById('chatLinkedOrderLabel').innerText = 
+        ticket.order_code ? `Заказ: ${ticket.order_code} (${ticket.price_rub || 60} ₽) • ${ticket.terminal_name}` : 'Заказ не привязан';
+
+      const container = document.getElementById('supportChatMessagesArea');
+      if (!container) return;
+
+      if (!ticket.messages || ticket.messages.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 text-xs p-4">Нет сообщений</div>';
+        return;
+      }
+
+      container.innerHTML = ticket.messages.map(m => {
+        if (m.sender_type === 'dispatcher') {
+          return `
+            <div class="flex justify-start">
+              <div class="bg-stankin-navy text-white text-[11px] rounded-2xl rounded-tl-none p-2.5 max-w-[85%] shadow-sm space-y-1">
+                <div class="font-bold text-amber-300 flex items-center justify-between">
+                  <span>${m.sender_name}</span>
+                  <i class="fa-solid fa-headset text-slate-300 ml-1"></i>
+                </div>
+                <div class="whitespace-pre-line text-slate-100">${m.message}</div>
+                <div class="text-[9px] text-slate-300 text-right">${m.created_at}</div>
+              </div>
+            </div>
+          `;
+        } else if (m.sender_type === 'system') {
+          return `
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 text-[10px] p-2 rounded-xl text-center space-y-0.5 shadow-sm">
+              <div class="font-bold text-amber-800"><i class="fa-solid fa-shield-halved mr-1"></i> ${m.sender_name}</div>
+              <div class="whitespace-pre-line">${m.message}</div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="flex justify-end">
+              <div class="bg-white border border-slate-200 text-slate-800 text-[11px] rounded-2xl rounded-tr-none p-2.5 max-w-[85%] shadow-sm space-y-1">
+                <div class="font-bold text-stankin-lightNavy text-right">${m.sender_name}</div>
+                <div class="whitespace-pre-line">${m.message}</div>
+                <div class="text-[9px] text-slate-400 text-right">${m.created_at}</div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendStudentSupportMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('supMessageInput');
+      const text = input.value.trim();
+      if (!text || !activeTicket) return;
+
+      try {
+        const res = await fetch('/api/client/send-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticket_id: activeTicket.id,
+            user_id: 1,
+            message: text
+          })
+        });
+
+        if (res.ok) {
+          input.value = '';
+          fetchActiveTicket();
+        }
+      } catch (e) {
+        console.warn('Ошибка отправки сообщения:', e);
+      }
+    }
+
+    // ==================== ОПРОС ТЕРМИНАЛОВ И БЛОКИРОВКА ПЕЧАТИ ====================
+    async function fetchTerminalStatuses() {
+      try {
+        const res = await fetch('/api/terminals');
+        if (res.ok) {
+          terminalsCache = await res.json();
+          const t1 = terminalsCache.find(x => x.id === 1);
+          const t2 = terminalsCache.find(x => x.id === 2);
+
+          const b1 = document.getElementById('termStatusBadge1');
+          if (b1 && t1) {
+            b1.innerText = t1.status;
+            b1.className = t1.status === 'Онлайн' 
+              ? 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
+              : 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
+          }
+
+          const b2 = document.getElementById('termStatusBadge2');
+          if (b2 && t2) {
+            b2.innerText = t2.status;
+            b2.className = t2.status === 'Онлайн' 
+              ? 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
+              : 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
+          }
+
+          checkSelectedTerminalAvailability();
+        }
+      } catch (e) {
+        console.warn('Ошибка терминалов:', e);
+      }
+    }
+
+    function checkSelectedTerminalAvailability() {
+      if (!terminalsCache || terminalsCache.length === 0) return;
+      const term = terminalsCache.find(x => x.id === selectedTerminalId);
+      if (!term) return;
+
+      const isBroken = term.status !== 'Онлайн';
+      const warningBanner = document.getElementById('terminalWarningBanner');
+      const warningText = document.getElementById('terminalWarningText');
+      const btnProceed = document.getElementById('btnProceedToPayment');
+      const btnText = document.getElementById('btnProceedToPaymentText');
+      const btnIcon = document.getElementById('btnProceedToPaymentIcon');
+
+      const paymentWarning = document.getElementById('paymentWarningBanner');
+      const btnSbp = document.getElementById('btnPaySbp');
+      const btnBonus = document.getElementById('btnPayBonus');
+
+      if (isBroken) {
+        if (warningBanner) warningBanner.classList.remove('hidden');
+        if (warningText) {
+          const altCampus = selectedTerminalId === 1 ? 'Новый корпус (Терминал №2)' : 'Старый корпус (Терминал №1)';
+          warningText.innerHTML = `Терминал «${term.name}» заблокирован (${term.status}). Переключитесь на <b>${altCampus}</b>!`;
+        }
+        if (btnProceed) {
+          btnProceed.disabled = true;
+          btnProceed.className = 'w-full bg-slate-300 text-slate-500 font-bold text-xs py-3 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed opacity-75';
+        }
+        if (btnText) btnText.innerText = 'Терминал временно не работает';
+        if (btnIcon) btnIcon.className = 'fa-solid fa-ban';
+
+        if (paymentWarning) paymentWarning.classList.remove('hidden');
+        if (btnSbp) btnSbp.disabled = true;
+        if (btnBonus) btnBonus.disabled = true;
+      } else {
+        if (warningBanner) warningBanner.classList.add('hidden');
+        if (btnProceed) {
+          btnProceed.disabled = false;
+          btnProceed.className = 'w-full bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold text-xs py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 cursor-pointer';
+        }
+        if (btnText) btnText.innerText = 'Перейти к оплате';
+        if (btnIcon) btnIcon.className = 'fa-solid fa-arrow-right';
+
+        if (paymentWarning) paymentWarning.classList.add('hidden');
+        if (btnSbp) btnSbp.disabled = false;
+        if (btnBonus) btnBonus.disabled = false;
+      }
+    }
+
+    function openSupportWithCurrentOrder() {
+      switchClientNav('support');
+      populateSupportOrderDropdown();
+    }
+
+    // Префлайт ГОСТ
+    function startPreflight(fileName, pages) {
+      selectedFile = fileName;
+      selectedPages = pages;
+      
+      const modal = document.getElementById('preflightModal');
+      const bar = document.getElementById('preflightProgressBar');
+      const statusText = document.getElementById('preflightStatusText');
+
+      modal.classList.remove('hidden');
+      bar.style.width = '10%';
+      statusText.innerText = 'Проверка полей ГОСТ (20-10-10-30 мм)...';
+
+      setTimeout(() => {
+        bar.style.width = '50%';
+        statusText.innerText = 'Проверка шрифтов Times New Roman 14 pt...';
+      }, 500);
+
+      setTimeout(() => {
+        bar.style.width = '85%';
+        statusText.innerText = 'Проверка нумерации страниц...';
+      }, 1000);
+
+      setTimeout(() => {
+        bar.style.width = '100%';
+        statusText.innerText = '✓ ГОСТ 7.32 успешно подтвержден!';
+      }, 1400);
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        bar.style.width = '0%';
+        
+        const cost = (selectedPages * 3.0).toFixed(2);
+        document.getElementById('step2FileName').innerText = selectedFile;
+        document.getElementById('step2PageCount').innerText = `${selectedPages} страниц`;
+        document.getElementById('step2TotalCost').innerText = `${cost} ₽`;
+        document.getElementById('step2PageCountCost').innerText = `${selectedPages} стр. × 3.00 ₽`;
+        
+        document.getElementById('step3CostBig').innerText = `${cost} ₽`;
+        updateSelectedCampus(selectedTerminalId);
+
+        goToStep(2);
+      }, 1800);
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      [1, 2, 3, 4].forEach(s => {
+        const screen = document.getElementById(`stepScreen-${s}`);
+        const dot = document.getElementById(`stepDot-${s}`);
+        if (s === step) {
+          screen.classList.remove('hidden');
+          dot.className = 'flex items-center space-x-1 font-bold text-amber-400';
+          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-[9px]';
+        } else if (s < step) {
+          screen.classList.add('hidden');
+          dot.className = 'flex items-center space-x-1 font-semibold text-emerald-400';
+          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px]';
+        } else {
+          screen.classList.add('hidden');
+          dot.className = 'flex items-center space-x-1 text-slate-400 font-medium';
+          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]';
+        }
+      });
+
+      if (step === 2) checkSelectedTerminalAvailability();
+    }
+
+    function updateSelectedCampus(id) {
+      selectedTerminalId = id;
+      const termName = id === 1 ? 'Старый корпус (Терминал №1)' : 'Новый корпус (Терминал №2)';
+      const summary = document.getElementById('step3OrderSummary');
+      if (summary) summary.innerText = `${selectedPages} страниц • ${termName}`;
+      checkSelectedTerminalAvailability();
+    }
+
+    async function executePayment(method) {
+      const term = terminalsCache.find(x => x.id === selectedTerminalId);
+      if (term && term.status !== 'Онлайн') {
+        alert(`⛔ Терминал «${term.name}» заблокирован (${term.status})! Выберите другой корпус.`);
+        goToStep(2);
+        return;
+      }
+
+      const modal = document.getElementById('paymentModal');
+      const title = document.getElementById('paymentModalTitle');
+      modal.classList.remove('hidden');
+      title.innerText = method === 'bonus' ? 'Списание бонусных баллов...' : 'Авторизация в СБП...';
+
+      const cost = selectedPages * 3.0;
+
+      try {
+        const res = await fetch('/api/client/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 1,
+            terminal_id: selectedTerminalId,
+            file_name: selectedFile,
+            page_count: selectedPages,
+            price_rub: cost,
+            payment_method: method
+          })
+        });
+
+        const data = await res.json();
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          if (res.ok) {
+            currentOrderCode = data.order_code;
+            currentPickupCode = data.pickup_code;
+            
+            document.getElementById('pickupCodeDisplay').innerText = data.pickup_code;
+            document.getElementById('pickupOrderCodeLabel').innerText = `Заказ: ${data.order_code}`;
+            document.getElementById('pickupCampusLabel').innerText = `${data.terminal_campus} (${data.terminal_name})`;
+            document.getElementById('pickupLocationLabel').innerText = data.terminal_location;
+            
+            fetchStudentProfile();
+            fetchStudentOrders();
+            goToStep(4);
+          } else {
+            alert(data.detail || 'Ошибка оплаты заказа');
+          }
+        }, 1200);
+      } catch (e) {
+        modal.classList.add('hidden');
+        alert('Ошибка связи с сервером');
+      }
+    }
+
+    function openOrderQrModal(orderCode, pickupCode, campus) {
+      document.getElementById('qrModalOrderCode').innerText = orderCode;
+      document.getElementById('qrModalPickupCode').innerText = pickupCode;
+      document.getElementById('qrModalCampus').innerText = campus;
+      document.getElementById('orderQrModal').classList.remove('hidden');
+    }
+
+    function closeOrderQrModal() {
+      document.getElementById('orderQrModal').classList.add('hidden');
+    }
+  </script>
+
+</body>
+</html>
