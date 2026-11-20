@@ -42,27 +42,47 @@ def run_tests():
     assert res_bad_print.status_code == 400, f"Печать на сломанном МФУ должна быть заблокирована с 400! Ответ: {res_bad_print.status_code}"
     print(f"✔ БАГ 2 (Печать на сломанном терминале) решен: бэкенд корректно вернул HTTP 400 ({res_bad_print.json()['detail']}).")
 
-    # 3. Успешная печать на рабочем терминале (Терминал №2: Новый корпус, Онлайн)
+    # 3. Успешная печать на рабочем терминале с выбором ГОСТ / Без ГОСТ
+    # Сначала проверяем заказ без ГОСТ (стандартная печать)
+    res_nogost_print = client.post("/api/client/order", json={
+        "user_id": 1,
+        "terminal_id": 2,
+        "file_name": "Шпаргалка_по_физике.docx",
+        "page_count": 10,
+        "price_rub": 30.0,
+        "payment_method": "bonus",
+        "is_gost": False
+    })
+    assert res_nogost_print.status_code == 200, f"Ошибка создания заказа без ГОСТ: {res_nogost_print.text}"
+    nogost_order = res_nogost_print.json()
+    assert nogost_order.get("is_gost") is False, "Флаг is_gost должен быть False"
+    print(f"✔ Заказ без ГОСТ (обычная печать) успешно создан: ID={nogost_order['order_id']}, ГОСТ={nogost_order['is_gost']}.")
+
+    # Затем создаем актуальный заказ по ГОСТ 7.32 (20 стр., 60 руб.)
     res_good_print = client.post("/api/client/order", json={
         "user_id": 1,
         "terminal_id": 2,
         "file_name": "Лабораторная_работа_СТАНКИН.pdf",
         "page_count": 20,
         "price_rub": 60.0,
-        "payment_method": "sbp"
+        "payment_method": "sbp",
+        "is_gost": True
     })
     assert res_good_print.status_code == 200, f"Ошибка создания заказа: {res_good_print.text}"
     new_order = res_good_print.json()
     new_order_id = new_order["order_id"]
     pickup_code = new_order["pickup_code"]
-    print(f"✔ Новый заказ успешно создан на онлайн-терминале №2: ID={new_order_id}, Код={new_order['order_code']}, Пин={pickup_code}.")
+    assert new_order.get("is_gost") is True, "Флаг is_gost должен быть True"
+    print(f"✔ Новый заказ по ГОСТ 7.32 успешно создан: ID={new_order_id}, Код={new_order['order_code']}, ГОСТ={new_order['is_gost']}.")
 
-    # 4. Проверка БАГА 2: Список заказов студента теперь содержит новый заказ первым
+    # 4. Проверка БАГА 2: Список заказов студента теперь содержит новые заказы первыми
     res_updated_orders = client.get("/api/client/orders?user_id=1")
     updated_orders = res_updated_orders.json()["orders"]
-    assert updated_orders[0]["id"] == new_order_id, "Новый заказ должен быть первым в списке (DESC)"
-    assert updated_orders[0]["order_status"] == "Готов к выдаче"
-    print(f"✔ Список заказов студента обновился: теперь {len(updated_orders)} заказов, новый заказ во главе списка.")
+    assert updated_orders[0]["id"] == new_order_id, "Заказ по ГОСТ должен быть первым (последний созданный)"
+    assert updated_orders[0]["is_gost"] == 1 or updated_orders[0]["is_gost"] is True, "Флаг is_gost должен быть 1"
+    assert updated_orders[1]["id"] == nogost_order["order_id"], "Заказ без ГОСТ должен быть вторым в списке (DESC)"
+    assert updated_orders[1]["is_gost"] == 0 or updated_orders[1]["is_gost"] is False, "Флаг is_gost должен быть 0"
+    print(f"✔ Список заказов студента обновился: теперь {len(updated_orders)} заказов, оба флага ГОСТ проверены.")
 
     # 5. Проверка БАГА 1: Подача жалобы в саппорт со СТРОГОЙ привязкой order_id
     res_issue = client.post("/api/client/report-issue", json={

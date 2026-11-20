@@ -89,11 +89,18 @@ def init_db(force_reseed: bool = False):
         price_rub REAL NOT NULL,
         status TEXT NOT NULL DEFAULT 'Завершен',
         pickup_code TEXT,
+        is_gost INTEGER DEFAULT 1,
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id),
         FOREIGN KEY (terminal_id) REFERENCES terminals (id)
     )
     """)
+
+    # Миграция: проверка наличия столбца is_gost в существующей таблице orders
+    cursor.execute("PRAGMA table_info(orders)")
+    order_cols = [c["name"] for c in cursor.fetchall()]
+    if "is_gost" not in order_cols:
+        cursor.execute("ALTER TABLE orders ADD COLUMN is_gost INTEGER DEFAULT 1")
 
     # Таблица обращений в техподдержку (тикетов)
     cursor.execute("""
@@ -862,7 +869,7 @@ def get_orders_list(limit: int = 50):
     cursor = conn.cursor()
     cursor.execute("""
     SELECT 
-        o.id, o.order_code, o.file_name, o.page_count, o.price_rub, o.status, o.pickup_code, o.created_at,
+        o.id, o.order_code, o.file_name, o.page_count, o.price_rub, o.status, o.pickup_code, o.is_gost, o.created_at,
         u.full_name as user_name, u.group_code as user_group,
         term.name as terminal_name, term.code as terminal_code
     FROM orders o
@@ -942,9 +949,10 @@ def get_student_user(user_id: int = 1):
         "created_at": row["created_at"]
     }
 
-def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str = "Курсовой_проект_Детали_машин.pdf", page_count: int = 20, price_rub: float = 60.0, payment_method: str = "sbp"):
+def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str = "Курсовой_проект_Детали_машин.pdf", page_count: int = 20, price_rub: float = 60.0, payment_method: str = "sbp", is_gost: bool = True):
     """
     Создание и оплата заказа через мобильный интерфейс студента:
+    - Выбор режима: оформление по ГОСТ 7.32 (is_gost=True) или стандартная печать (is_gost=False);
     - БАГ №2: Запрет создания и запуска печати студентом на неработающем МФУ;
     - Генерирует уникальный цифровой код выдачи (например, 654-321);
     - Выполняет транзакцию (СБП или списание бонусных баллов);
@@ -1010,9 +1018,9 @@ def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str =
 
     # Создаем заказ (статус 'Готов к выдаче' для активного получения)
     cursor.execute("""
-    INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, pickup_code, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'Готов к выдаче', ?, ?)
-    """, (rand_order_code, user_id, terminal_id, file_name, page_count, price_rub, pickup_code, now_str))
+    INSERT INTO orders (order_code, user_id, terminal_id, file_name, page_count, price_rub, status, pickup_code, is_gost, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'Готов к выдаче', ?, ?, ?)
+    """, (rand_order_code, user_id, terminal_id, file_name, page_count, price_rub, pickup_code, 1 if is_gost else 0, now_str))
     order_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -1034,6 +1042,7 @@ def create_client_order(user_id: int = 1, terminal_id: int = 1, file_name: str =
         "page_count": page_count,
         "price_rub": price_rub,
         "payment_method": payment_method,
+        "is_gost": bool(is_gost),
         "terminal_id": terminal_id,
         "terminal_code": term["code"] if term else "STANKIN-01",
         "terminal_name": term["name"] if term else "Терминал СТАНКИН",
@@ -1123,7 +1132,7 @@ def get_student_orders_list(user_id: int = 1):
     cursor.execute("""
     SELECT 
         o.id, o.order_code, o.user_id, o.terminal_id, o.file_name, o.page_count, 
-        o.price_rub, o.status as order_status, o.pickup_code, o.created_at,
+        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.created_at,
         t.code as terminal_code, t.name as terminal_name, t.campus as terminal_campus, 
         t.location as terminal_location, t.status as terminal_status
     FROM orders o
@@ -1179,7 +1188,7 @@ def get_student_active_order(user_id: int = 1):
     cursor.execute("""
     SELECT 
         o.id, o.order_code, o.user_id, o.terminal_id, o.file_name, o.page_count, 
-        o.price_rub, o.status as order_status, o.pickup_code, o.created_at,
+        o.price_rub, o.status as order_status, o.pickup_code, o.is_gost, o.created_at,
         t.code as terminal_code, t.name as terminal_name, t.campus as terminal_campus, 
         t.location as terminal_location, t.status as terminal_status, t.paper_sheets, t.paper_max,
         t.toner_printed_pages, t.cartridge_nominal

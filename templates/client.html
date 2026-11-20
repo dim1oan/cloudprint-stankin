@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CloudPrint СТАНКИН — Мобильный сервис студента</title>
+  <title>CloudPrint СТАНКИН — Смарт-полиграфия университета</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <script>
     tailwind.config = {
@@ -27,14 +27,15 @@
           colors: {
             stankin: {
               navy: '#1B365D',
-              deep: '#0D2040',
+              deep: '#16243D',
               lightNavy: '#254E86',
               crimson: '#8B0000',
               burgundy: '#7A0C1E',
               accentRed: '#BA1B1D',
               gold: '#D97706',
-              surface: '#F8FAFC',
-              card: '#FFFFFF'
+              surface: '#F4F6F9',
+              card: '#FFFFFF',
+              border: '#E2E8F0'
             }
           }
         }
@@ -43,666 +44,971 @@
   </script>
 
   <style>
-    .phone-scroll::-webkit-scrollbar {
-      width: 4px;
+    /* Плавная прокрутка */
+    html {
+      scroll-behavior: smooth;
     }
-    .phone-scroll::-webkit-scrollbar-track {
+    
+    /* Стилизация скроллбаров */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
       background: #f1f5f9;
     }
-    .phone-scroll::-webkit-scrollbar-thumb {
+    ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
 
     @keyframes pulse-subtle {
       0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.02); opacity: 0.9; }
+      50% { transform: scale(1.015); opacity: 0.95; }
     }
     .animate-subtle {
       animation: pulse-subtle 2.5s infinite ease-in-out;
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-stankin-navy selection:text-white">
+<body class="bg-[#F4F6F9] text-slate-800 font-sans min-h-screen flex flex-col selection:bg-stankin-navy selection:text-white">
 
-  <!-- ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ДЛЯ ДЕМОНСТРАЦИИ (ВНЕ ТЕЛЕФОНА) -->
-  <div class="w-full max-w-md flex items-center justify-between mb-3 text-xs px-2 text-slate-400">
-    <div class="flex items-center space-x-2">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-      <span class="font-medium text-slate-300">Режим: Студент (Mobile Web App)</span>
-    </div>
-    <a href="/" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-semibold px-3 py-1.5 rounded-lg border border-blue-400/30 transition-all flex items-center space-x-1.5 shadow-md">
-      <i class="fa-solid fa-desktop text-blue-300"></i>
-      <span>Панель администратора →</span>
-    </a>
-  </div>
-
-  <!-- КОРПУС СМАРТФОНА (DEVICE FRAME) -->
-  <div class="w-full max-w-sm sm:max-w-md bg-slate-800 rounded-[2.5rem] p-3 shadow-2xl border-4 border-slate-700 relative">
-    
-    <!-- ЭКРАН ТЕЛЕФОНА -->
-    <div class="bg-slate-50 rounded-[2rem] overflow-hidden flex flex-col h-[740px] relative shadow-inner">
-      
-      <!-- СТАТУС-БАР СМАРТФОНА -->
-      <div class="bg-stankin-deep text-white px-5 pt-3 pb-2 flex items-center justify-between text-[11px] font-medium tracking-tight select-none">
-        <span id="phoneClock" class="font-bold">13:20</span>
-        <!-- Динамический вырез (Dynamic Island) -->
-        <div class="w-20 h-4 bg-black rounded-full mx-auto flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-slate-800 mr-2"></div>
-          <div class="w-1.5 h-1.5 rounded-full bg-blue-950"></div>
+  <!-- ==================== ВЕРХНЯЯ ДЕСКТОПНАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ (HEADER / NAVBAR) ==================== -->
+  <header class="bg-stankin-deep text-white border-b border-blue-900/40 sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- Слева: Логотип СТАНКИН -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-stankin-navy to-stankin-burgundy flex items-center justify-center font-bold text-white shadow-md border border-white/20 text-lg sm:text-xl">
+            <i class="fa-solid fa-print"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-base sm:text-lg font-black tracking-tight text-white">CloudPrint <span class="text-red-400">СТАНКИН</span></span>
+              <span class="hidden md:inline-flex px-2 py-0.5 text-[10px] font-bold rounded-md bg-white/10 text-slate-200 border border-white/20">Студент</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-300 font-medium">
+              Смарт-полиграфия университета
+            </p>
+          </div>
         </div>
-        <div class="flex items-center space-x-1.5 text-slate-300 text-[10px]">
-          <i class="fa-solid fa-signal"></i>
-          <i class="fa-solid fa-wifi"></i>
-          <i class="fa-solid fa-battery-full text-emerald-400"></i>
+
+        <!-- По центру: Вкладки десктопной навигации -->
+        <nav class="hidden md:flex items-center space-x-1 bg-white/10 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+          <button onclick="switchClientNav('print')" id="clientNavBtn-print" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 bg-white text-stankin-navy shadow-sm">
+            <i class="fa-solid fa-print text-sm text-blue-600"></i>
+            <span>Печать документов</span>
+          </button>
+
+          <button onclick="switchClientNav('orders')" id="clientNavBtn-orders" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center space-x-2 relative">
+            <i class="fa-solid fa-receipt text-sm"></i>
+            <span>Мои заказы</span>
+            <span id="navOrdersBadge" class="hidden w-2 h-2 rounded-full bg-emerald-400"></span>
+          </button>
+
+          <button onclick="switchClientNav('support')" id="clientNavBtn-support" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-headset text-sm"></i>
+            <span>Поддержка</span>
+          </button>
+        </nav>
+
+        <!-- Справа: Профиль, Баланс и переход в Панель диспетчера -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          
+          <!-- Баланс студента -->
+          <div class="flex items-center space-x-2 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-xl border border-white/15 transition-all">
+            <div class="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+            <div class="text-right">
+              <div class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold leading-none">Баланс</div>
+              <span id="studentBalanceBadge" class="text-xs sm:text-sm font-extrabold text-amber-300 font-mono">150.00 ₽</span>
+            </div>
+          </div>
+
+          <!-- Студент -->
+          <div class="hidden lg:flex items-center space-x-2.5 pl-2 border-l border-white/10">
+            <div class="w-8 h-8 rounded-full bg-blue-600/30 border border-blue-400/40 text-blue-200 flex items-center justify-center text-xs font-bold">
+              ИМ
+            </div>
+            <div class="text-left">
+              <div id="studentProfileName" class="text-xs font-bold text-white leading-tight">Иванов М. В.</div>
+              <div class="text-[10px] text-slate-400">Группа ИДБ-25-15</div>
+            </div>
+          </div>
+
+          <!-- Переход в Панель администратора -->
+          <a href="/" target="_blank" class="bg-gradient-to-r from-stankin-lightNavy to-stankin-navy hover:from-blue-600 hover:to-stankin-lightNavy text-white font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl border border-blue-400/30 transition-all flex items-center space-x-1.5 shadow-sm hover:shadow">
+            <i class="fa-solid fa-desktop text-blue-300"></i>
+            <span class="hidden sm:inline">Панель администратора →</span>
+            <span class="sm:hidden">Админка →</span>
+          </a>
+
+        </div>
+
+      </div>
+
+      <!-- Мобильное меню вкладок (для узких экранов) -->
+      <div class="flex md:hidden border-t border-white/10 py-2 justify-around text-xs">
+        <button onclick="switchClientNav('print')" id="clientMobileNavBtn-print" class="px-3 py-1 rounded-lg font-bold bg-white text-stankin-navy flex items-center space-x-1.5">
+          <i class="fa-solid fa-print"></i>
+          <span>Печать</span>
+        </button>
+        <button onclick="switchClientNav('orders')" id="clientMobileNavBtn-orders" class="px-3 py-1 rounded-lg font-medium text-slate-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Заказы</span>
+        </button>
+        <button onclick="switchClientNav('support')" id="clientMobileNavBtn-support" class="px-3 py-1 rounded-lg font-medium text-slate-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-headset"></i>
+          <span>Поддержка</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ (DESKTOP WORKSPACE) ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 1: ОФОРМЛЕНИЕ ПЕЧАТИ (VIEW-PRINT)                                 -->
+    <!-- ========================================================================= -->
+    <div id="view-print" class="space-y-6">
+
+      <!-- ГОРИЗОНТАЛЬНЫЙ ДЕСКТОПНЫЙ ВЕБ-СТЕППЕР -->
+      <div id="printWizardSteps" class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 relative">
+          
+          <!-- Шаг 1: Файл -->
+          <div id="stepDot-1" class="flex items-center space-x-3 p-2.5 rounded-xl border border-amber-300 bg-amber-50/60 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center font-extrabold text-xs shadow-sm">
+              1
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">1. Загрузка файла</div>
+              <div class="text-[10px] text-slate-500">Документ и режим ГОСТ</div>
+            </div>
+          </div>
+
+          <!-- Шаг 2: Параметры и терминал -->
+          <div id="stepDot-2" class="flex items-center space-x-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">
+              2
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-slate-700">2. Параметры и МФУ</div>
+              <div class="text-[10px] text-slate-400">Выбор корпуса и проверка</div>
+            </div>
+          </div>
+
+          <!-- Шаг 3: Оплата -->
+          <div id="stepDot-3" class="flex items-center space-x-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">
+              3
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-slate-700">3. Оплата заказа</div>
+              <div class="text-[10px] text-slate-400">СБП или бонусы</div>
+            </div>
+          </div>
+
+          <!-- Шаг 4: Выдача -->
+          <div id="stepDot-4" class="flex items-center space-x-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">
+              4
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-slate-700">4. Выдача распечатки</div>
+              <div class="text-[10px] text-slate-400">QR-код и пин получения</div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- ВНУТРЕННЯЯ ШАПКА ПРИЛОЖЕНИЯ CLOUDPRINT -->
-      <header class="bg-stankin-navy text-white px-4 py-3 shadow-md border-b border-blue-900/40">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-lg bg-stankin-burgundy flex items-center justify-center font-bold text-white shadow-sm border border-red-400/30 text-sm">
-              <i class="fa-solid fa-print"></i>
-            </div>
-            <div>
-              <div class="text-sm font-extrabold tracking-tight leading-none text-white">CloudPrint <span class="text-red-400">СТАНКИН</span></div>
-              <div class="text-[10px] text-slate-300 mt-0.5">Смарт-полиграфия</div>
-            </div>
-          </div>
-          
-          <!-- Профиль студента и баланс -->
-          <div class="text-right">
-            <div class="text-[10px] text-slate-300 font-medium truncate max-w-[120px]" id="studentProfileName">Иванов М. В. (ИДБ-25-15)</div>
-            <div class="inline-flex items-center space-x-1 bg-white/10 px-2 py-0.5 rounded-full border border-white/20 mt-0.5">
-              <i class="fa-solid fa-coins text-amber-400 text-[9px]"></i>
-              <span id="studentBalanceBadge" class="text-[11px] font-bold text-amber-300">150.00 ₽</span>
-            </div>
-          </div>
-        </div>
+      <!-- ДВУХКОЛОНОЧНЫЙ СПЛИТ-ЛЕЙАУТ (GRID / SPLIT LAYOUT) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        
+        <!-- ЛЕВАЯ ОСНОВНАЯ КОЛОНКА (65% ШИРИНЫ - 8 ИЗ 12 КОЛОНОК) -->
+        <div class="lg:col-span-8 space-y-6">
 
-        <!-- ИНДИКАТОР ШАГОВ (ТОЛЬКО НА ВКЛАДКЕ «ПЕЧАТЬ») -->
-        <div id="printWizardSteps" class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-300">
-          <div id="stepDot-1" class="flex items-center space-x-1 font-bold text-amber-400">
-            <span class="w-4 h-4 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-[9px]">1</span>
-            <span>Файл</span>
-          </div>
-          <div class="h-0.5 w-6 bg-white/20" id="stepLine-1"></div>
-
-          <div id="stepDot-2" class="flex items-center space-x-1 text-slate-400 font-medium">
-            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">2</span>
-            <span>Параметры</span>
-          </div>
-          <div class="h-0.5 w-6 bg-white/20" id="stepLine-2"></div>
-
-          <div id="stepDot-3" class="flex items-center space-x-1 text-slate-400 font-medium">
-            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">3</span>
-            <span>Оплата</span>
-          </div>
-          <div class="h-0.5 w-6 bg-white/20" id="stepLine-3"></div>
-
-          <div id="stepDot-4" class="flex items-center space-x-1 text-slate-400 font-medium">
-            <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]">4</span>
-            <span>Выдача</span>
-          </div>
-        </div>
-      </header>
-
-      <!-- КОНТЕЙНЕР ЭКРАНОВ -->
-      <main class="flex-1 overflow-y-auto p-4 phone-scroll relative">
-
-        <!-- ==================== ВКЛАДКА 1: ОФОРМЛЕНИЕ ПЕЧАТИ (VIEW-PRINT) ==================== -->
-        <div id="view-print" class="space-y-4">
-
-          <!-- ШАГ 1: ЭКРАН ПРИВЕТСТВИЯ И ЗАГРУЗКИ -->
-          <div id="stepScreen-1" class="space-y-4 pt-1">
-            <div class="text-center space-y-1">
-              <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-stankin-navy to-stankin-lightNavy text-white flex items-center justify-center text-xl shadow-lg mb-2">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-              </div>
-              <h2 class="text-base font-extrabold text-stankin-navy">Печать работ по ГОСТ</h2>
-              <p class="text-xs text-slate-500">Автоматический префлайт ГОСТ 7.32 и печать на МФУ университета</p>
-            </div>
-
-            <!-- Большая кнопка загрузки файла -->
-            <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-300 hover:border-stankin-lightNavy transition-colors text-center space-y-3 shadow-sm">
-              <div class="text-slate-400 text-3xl">
-                <i class="fa-regular fa-file-pdf text-red-500"></i>
-              </div>
-              <div>
-                <div class="text-xs font-bold text-slate-800">Выберите документ для печати</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">Форматы: PDF, DOCX (до 50 МБ)</div>
-              </div>
-              
-              <button onclick="startPreflight('Курсовой_проект_Детали_машин_Иванов.pdf', 20)" class="w-full bg-stankin-navy hover:bg-stankin-lightNavy active:bg-stankin-deep text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-file-arrow-up"></i>
-                <span>Загрузить документ (DOCX/PDF)</span>
-              </button>
-            </div>
-
-            <!-- Быстрые шаблоны студенческих работ -->
-            <div class="space-y-2 pt-1">
-              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Примеры учебных работ:</div>
-              
-              <div onclick="startPreflight('Курсовой_проект_Детали_машин.pdf', 20)" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-sm">
-                <div class="flex items-center space-x-2.5">
-                  <i class="fa-solid fa-file-pdf text-red-600 text-lg"></i>
-                  <div class="text-left">
-                    <div class="text-xs font-bold text-slate-800">Курсовой_проект_Детали_машин.pdf</div>
-                    <div class="text-[10px] text-slate-400">20 страниц • А4 • 60.00 ₽</div>
-                  </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-              </div>
-
-              <div onclick="startPreflight('Дипломный_проект_ВКР_СТАНКИН.pdf', 45)" class="bg-white p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-sm">
-                <div class="flex items-center space-x-2.5">
-                  <i class="fa-solid fa-file-pdf text-red-600 text-lg"></i>
-                  <div class="text-left">
-                    <div class="text-xs font-bold text-slate-800">Дипломный_проект_ВКР_СТАНКИН.pdf</div>
-                    <div class="text-[10px] text-slate-400">45 страниц • А4 • 135.00 ₽</div>
-                  </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- ШАГ 2: НАСТРОЙКА ПЕЧАТИ (С ВАЛИДАЦИЕЙ СТАТУСА МФУ) -->
-          <div id="stepScreen-2" class="hidden space-y-4">
+          <!-- ----------------------------------------------------------------- -->
+          <!-- ЭКРАН 1: ВЫБОР ФАЙЛА И РЕЖИМА ГОСТ                                 -->
+          <!-- ----------------------------------------------------------------- -->
+          <div id="stepScreen-1" class="space-y-6">
             
-            <!-- Карточка выбранного документа -->
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-file-pdf"></i>
+            <!-- Выбор: Оформлять по ГОСТу или стандартная печать -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-sm font-extrabold text-stankin-navy flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-600"></i>
+                    Режим оформления студенческой работы
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Выберите стандарт форматирования перед отправкой на МФУ университета</p>
+                </div>
+                <span id="step1GostBadge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  ГОСТ 7.32
+                </span>
               </div>
-              <div class="flex-1 min-w-0">
-                <div id="step2FileName" class="text-xs font-bold text-slate-800 truncate">Курсовой_проект_Детали_машин.pdf</div>
-                <div class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-2">
-                  <span id="step2PageCount">20 страниц</span>
-                  <span>•</span>
-                  <span class="text-emerald-600 font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-check"></i> ГОСТ 7.32 пройден
-                  </span>
+
+              <!-- Переключатель с двумя карточками -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                
+                <!-- Опция 1: По ГОСТ -->
+                <button type="button" id="toggleGostTrue" onclick="setGostMode(true)" class="p-4 rounded-xl border-2 border-stankin-navy bg-blue-50/70 text-left transition-all shadow-sm flex items-start space-x-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-stankin-navy text-white flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+                    <i class="fa-solid fa-stamp text-amber-300"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs sm:text-sm font-extrabold text-stankin-navy">По ГОСТ 7.32 (СТАНКИН)</div>
+                    <div class="text-[11px] text-slate-600 mt-1 leading-snug">
+                      Поля 20-10-10-30 мм, Times New Roman 14 pt, рамка, проверка нумерации. Рекомендуется для ВКР, курсовых и отчетов.
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Опция 2: Обычная печать -->
+                <button type="button" id="toggleGostFalse" onclick="setGostMode(false)" class="p-4 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition-all flex items-start space-x-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-lg flex-shrink-0">
+                    <i class="fa-solid fa-file-lines"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs sm:text-sm font-bold text-slate-800">Обычная печать (без ГОСТ)</div>
+                    <div class="text-[11px] text-slate-500 mt-1 leading-snug">
+                      Печать документа как есть в оригинале без изменения полей и разметки. Для лекций, шпаргалок и презентаций.
+                    </div>
+                  </div>
+                </button>
+
+              </div>
+
+              <div id="step1GostHint" class="bg-blue-50/60 border border-blue-200/80 p-3 rounded-xl text-xs text-blue-900 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                <span>При загрузке будет выполнен автоматический префлайт ГОСТ 7.32 со сверкой полей и шрифтов</span>
+              </div>
+            </div>
+
+            <!-- Большая десктопная зона загрузки документа (Dropzone) -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-dashed border-slate-300 hover:border-stankin-lightNavy transition-colors text-center space-y-4 shadow-sm">
+              <div class="w-16 h-16 mx-auto rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-3xl shadow-inner">
+                <i class="fa-regular fa-file-pdf"></i>
+              </div>
+
+              <div>
+                <h3 class="text-base font-extrabold text-slate-800">Перетащите документ сюда или выберите файл</h3>
+                <p class="text-xs text-slate-500 mt-1">Поддерживаемые форматы: <b>PDF, DOCX</b> (максимальный объем файла до 50 МБ)</p>
+              </div>
+
+              <div class="flex justify-center pt-2">
+                <button onclick="startPreflight('Курсовой_проект_Детали_машин_Иванов.pdf', 20)" class="bg-stankin-navy hover:bg-stankin-lightNavy active:bg-stankin-deep text-white font-extrabold text-xs sm:text-sm py-3 px-6 rounded-xl shadow-md transition-all flex items-center space-x-2">
+                  <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                  <span>Загрузить документ студента (20 стр.)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Примеры учебных работ студента для мгновенного теста -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-folder-open text-blue-600"></i>
+                Готовые образцы работ студента:
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div onclick="startPreflight('Курсовой_проект_Детали_машин.pdf', 20)" class="p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-xs">
+                  <div class="flex items-center space-x-3 min-w-0">
+                    <i class="fa-solid fa-file-pdf text-red-600 text-2xl flex-shrink-0"></i>
+                    <div class="truncate">
+                      <div class="text-xs font-bold text-slate-800 truncate">Курсовой_проект_Детали_машин.pdf</div>
+                      <div class="text-[11px] text-slate-400 mt-0.5">20 страниц • А4 • 60.00 ₽</div>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-300 ml-2"></i>
+                </div>
+
+                <div onclick="startPreflight('Дипломный_проект_ВКР_СТАНКИН.pdf', 45)" class="p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between shadow-xs">
+                  <div class="flex items-center space-x-3 min-w-0">
+                    <i class="fa-solid fa-file-pdf text-red-600 text-2xl flex-shrink-0"></i>
+                    <div class="truncate">
+                      <div class="text-xs font-bold text-slate-800 truncate">Дипломный_проект_ВКР_СТАНКИН.pdf</div>
+                      <div class="text-[11px] text-slate-400 mt-0.5">45 страниц • А4 • 135.00 ₽</div>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-arrow-right text-xs text-slate-300 ml-2"></i>
                 </div>
               </div>
             </div>
 
-            <!-- Предупреждающий баннер аварии МФУ -->
-            <div id="terminalWarningBanner" class="hidden p-3 rounded-2xl bg-red-50 border border-red-300 text-xs text-red-800 space-y-1">
-              <div class="font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
-                Терминал временно недоступен!
+          </div>
+
+          <!-- ----------------------------------------------------------------- -->
+          <!-- ЭКРАН 2: ВЫБОР ТЕРМИНАЛА И ПАРАМЕТРОВ ПЕЧАТИ                       -->
+          <!-- ----------------------------------------------------------------- -->
+          <div id="stepScreen-2" class="hidden space-y-6">
+
+            <!-- Карточка загруженного документа с переключателем ГОСТ -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Выбранный документ для печати:</span>
+                <button onclick="goToStep(1)" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1">
+                  <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                  <span>Заменить файл</span>
+                </button>
               </div>
-              <p id="terminalWarningText" class="text-[11px] text-red-700">
-                На выбранном терминале зафиксирован аппаратный сбой. Печать заблокирована. Пожалуйста, переключитесь на другой корпус!
+
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center space-x-3.5 min-w-0">
+                  <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <div id="step2FileName" class="text-sm font-extrabold text-slate-800 truncate">Курсовой_проект_Детали_машин.pdf</div>
+                    <div class="text-xs text-slate-500 mt-1 flex items-center space-x-2">
+                      <span id="step2PageCount" class="font-semibold">20 страниц</span>
+                      <span>•</span>
+                      <span>Формат А4</span>
+                      <span>•</span>
+                      <span id="step2GostBadge" class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-bold text-[10px] flex items-center gap-1">
+                        <i class="fa-solid fa-stamp text-emerald-600"></i> ГОСТ 7.32 пройден
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Быстрый переключатель ГОСТ прямо на Шаге 2 -->
+                <div class="flex items-center space-x-1.5 bg-white p-1 rounded-xl border border-slate-300 self-start sm:self-center">
+                  <span class="text-[11px] font-semibold text-slate-500 px-2">ГОСТ 7.32:</span>
+                  <button type="button" id="step2GostBtnYes" onclick="setGostMode(true)" class="px-3 py-1 rounded-lg text-xs font-bold bg-stankin-navy text-white shadow-sm transition-all">
+                    Да
+                  </button>
+                  <button type="button" id="step2GostBtnNo" onclick="setGostMode(false)" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">
+                    Нет
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Предупреждающий баннер аппаратного сбоя МФУ -->
+            <div id="terminalWarningBanner" class="hidden p-4 rounded-2xl bg-red-50 border border-red-300 text-xs sm:text-sm text-red-900 space-y-1.5 shadow-sm">
+              <div class="font-bold flex items-center gap-2 text-red-700">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                <span>Терминал временно заблокирован диспетчерской службой!</span>
+              </div>
+              <p id="terminalWarningText" class="text-xs text-red-800">
+                На выбранном терминале зафиксирован аппаратный сбой. Печать заблокирована во избежание списания средств. Пожалуйста, переключитесь на терминал другого корпуса!
               </p>
             </div>
 
-            <!-- Выбор корпуса -->
-            <div class="space-y-2">
-              <label class="block text-xs font-bold text-slate-700">Выберите корпус для получения:</label>
-              
-              <!-- Старый корпус -->
-              <label id="campusLabel1" class="relative flex items-center p-3 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/50 cursor-pointer transition-all shadow-sm">
-                <input type="radio" name="campusSelection" value="1" checked onchange="updateSelectedCampus(1)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
-                <div class="ml-3 flex-1">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-800">Старый корпус</span>
-                    <span id="termStatusBadge1" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Онлайн</span>
-                  </div>
-                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №1 • Холл 1 этажа (гардероб)</div>
-                </div>
-              </label>
-
-              <!-- Новый корпус -->
-              <label id="campusLabel2" class="relative flex items-center p-3 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/50 cursor-pointer transition-all shadow-sm">
-                <input type="radio" name="campusSelection" value="2" onchange="updateSelectedCampus(2)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
-                <div class="ml-3 flex-1">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-800">Новый корпус</span>
-                    <span id="termStatusBadge2" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Онлайн</span>
-                  </div>
-                  <div class="text-[10px] text-slate-500 mt-0.5">Терминал №2 • Холл 1 этажа (у поста с охраной)</div>
-                </div>
-              </label>
-            </div>
-
-            <!-- Итоговая стоимость -->
-            <div class="bg-gradient-to-r from-stankin-deep to-stankin-navy text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+            <!-- Секция выбора терминала получения (2 интерактивные карточки) -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
               <div>
-                <div class="text-[10px] text-slate-300 uppercase tracking-wider font-semibold">Итого к оплате:</div>
-                <div id="step2TotalCost" class="text-2xl font-extrabold text-amber-300">60.00 ₽</div>
+                <h3 class="text-sm font-extrabold text-stankin-navy flex items-center gap-2">
+                  <i class="fa-solid fa-location-dot text-stankin-crimson"></i>
+                  Выберите терминал выдачи распечатки
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Документ будет отправлен в очередь выбранного лазерного МФУ</p>
               </div>
-              <div class="text-right text-[11px] text-slate-300">
-                <div id="step2PageCountCost">20 стр. × 3.00 ₽</div>
-                <div class="text-emerald-400 font-semibold">Скидка студента 100%</div>
-              </div>
-            </div>
 
-            <!-- Кнопка перехода к оплате (блокируется при аварии) -->
-            <div class="space-y-2 pt-1">
-              <button id="btnProceedToPayment" onclick="goToStep(3)" class="w-full bg-stankin-navy hover:bg-stankin-lightNavy active:bg-stankin-deep text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
-                <span id="btnProceedToPaymentText">Перейти к оплате</span>
-                <i id="btnProceedToPaymentIcon" class="fa-solid fa-arrow-right"></i>
-              </button>
-              <button onclick="goToStep(1)" class="w-full text-slate-500 hover:text-slate-800 text-xs py-1.5 font-medium transition-colors">
-                ← Выбрать другой документ
-              </button>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- Терминал 1: Старый корпус -->
+                <label id="campusLabel1" class="relative flex flex-col p-4 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/40 cursor-pointer transition-all shadow-xs hover:border-slate-300">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2.5">
+                      <input type="radio" name="campusSelection" value="1" checked onchange="updateSelectedCampus(1)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
+                      <span class="text-sm font-extrabold text-slate-800">Старый корпус</span>
+                    </div>
+                    <span id="termStatusBadge1" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                      Онлайн
+                    </span>
+                  </div>
+                  <div class="text-xs text-slate-600 font-semibold">Терминал №1 (STANKIN-OLD-01)</div>
+                  <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-pin text-slate-400"></i>
+                    <span>Холл 1 этажа (рядом с гардеробом)</span>
+                  </div>
+                  <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-400 flex justify-between items-center">
+                    <span>Бумага А4: 500 л.</span>
+                    <span>Тонер: TK-1150</span>
+                  </div>
+                </label>
+
+                <!-- Терминал 2: Новый корпус -->
+                <label id="campusLabel2" class="relative flex flex-col p-4 rounded-2xl border-2 border-slate-200 has-[:checked]:border-stankin-navy has-[:checked]:bg-blue-50/40 cursor-pointer transition-all shadow-xs hover:border-slate-300">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2.5">
+                      <input type="radio" name="campusSelection" value="2" onchange="updateSelectedCampus(2)" class="w-4 h-4 text-stankin-navy focus:ring-stankin-navy">
+                      <span class="text-sm font-extrabold text-slate-800">Новый корпус</span>
+                    </div>
+                    <span id="termStatusBadge2" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                      Онлайн
+                    </span>
+                  </div>
+                  <div class="text-xs text-slate-600 font-semibold">Терминал №2 (STANKIN-NEW-01)</div>
+                  <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-pin text-slate-400"></i>
+                    <span>Холл 1 этажа (у поста с охраной)</span>
+                  </div>
+                  <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-400 flex justify-between items-center">
+                    <span>Бумага А4: 500 л.</span>
+                    <span>Тонер: TK-1150</span>
+                  </div>
+                </label>
+
+              </div>
             </div>
 
           </div>
 
-          <!-- ШАГ 3: ОПЛАТА -->
-          <div id="stepScreen-3" class="hidden space-y-4">
+          <!-- ----------------------------------------------------------------- -->
+          <!-- ЭКРАН 3: ВЫБОР СПОСОБА ОПЛАТЫ                                      -->
+          <!-- ----------------------------------------------------------------- -->
+          <div id="stepScreen-3" class="hidden space-y-6">
             
-            <div class="text-center space-y-1">
-              <div class="text-xs font-bold text-slate-500">Оформление печати</div>
-              <div id="step3CostBig" class="text-3xl font-extrabold text-stankin-navy">60.00 ₽</div>
-              <p id="step3OrderSummary" class="text-xs text-slate-500">20 страниц • Старый корпус</p>
-            </div>
-
-            <!-- Предупреждение -->
-            <div id="paymentWarningBanner" class="hidden p-3 rounded-2xl bg-red-100 border border-red-300 text-xs text-red-800 font-bold text-center">
-              <i class="fa-solid fa-ban text-red-600 mr-1"></i>
-              Выбранный терминал временно не работает. Оплата заблокирована.
-            </div>
-
-            <!-- Кнопки оплаты -->
-            <div class="space-y-3 pt-1">
-              <button id="btnPaySbp" onclick="executePayment('sbp')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 text-white p-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-between border border-emerald-400/30">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-xl font-bold shadow-sm">
-                    <i class="fa-solid fa-qrcode"></i>
-                  </div>
-                  <div class="text-left">
-                    <div class="text-xs font-extrabold tracking-wide">Оплатить через СБП</div>
-                    <div class="text-[10px] text-emerald-100">Система быстрых платежей • 0% комиссии</div>
-                  </div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+              <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-extrabold text-stankin-navy">Выберите способ оплаты заказа</h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Безопасная оплата через университетский шлюз или бонусными баллами</p>
                 </div>
-                <i class="fa-solid fa-chevron-right text-xs text-emerald-200"></i>
-              </button>
-
-              <button id="btnPayBonus" onclick="executePayment('bonus')" class="w-full bg-white hover:bg-slate-50 text-slate-800 p-3.5 rounded-2xl border-2 border-slate-200 shadow-sm transition-all flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shadow-sm">
-                    <i class="fa-solid fa-coins"></i>
-                  </div>
-                  <div class="text-left">
-                    <div class="text-xs font-extrabold">Оплатить бонусами</div>
-                    <div id="btnPayBonusSubtitle" class="text-[10px] text-slate-500">Доступно: 150.00 баллов (1 балл = 1 ₽)</div>
-                  </div>
+                <div class="text-right">
+                  <span class="text-xs text-slate-400">К списанию:</span>
+                  <div id="step3CostBig" class="text-xl font-extrabold text-stankin-navy font-mono">60.00 ₽</div>
                 </div>
-                <span class="text-xs font-bold text-stankin-navy">Списать ₽</span>
-              </button>
-            </div>
+              </div>
 
-            <button onclick="goToStep(2)" class="w-full text-slate-500 hover:text-slate-800 text-xs py-2 font-medium transition-colors">
-              ← Вернуться к настройкам печати
-            </button>
+              <!-- Предупреждение о блокировке оплаты при сбое МФУ -->
+              <div id="paymentWarningBanner" class="hidden p-4 rounded-xl bg-red-100 border border-red-300 text-xs text-red-800 font-bold text-center">
+                <i class="fa-solid fa-ban text-red-600 mr-1.5"></i>
+                Выбранный терминал временно заблокирован. Оплата остановлена диспетчером.
+              </div>
+
+              <!-- Способ 1: СБП -->
+              <div class="space-y-3">
+                <button id="btnPaySbp" onclick="executePayment('sbp')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-4 sm:p-5 rounded-2xl shadow-md transition-all flex items-center justify-between border border-emerald-400/30 text-left">
+                  <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-2xl font-black shadow-sm flex-shrink-0">
+                      <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-extrabold tracking-wide flex items-center gap-2">
+                        <span>Оплатить через СБП (Система быстрых платежей)</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-800/40 text-emerald-200">0% комиссии</span>
+                      </div>
+                      <div class="text-xs text-emerald-100 mt-1">
+                        Мгновенное подтверждение в мобильном приложении любого банка РФ
+                      </div>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-sm text-emerald-200"></i>
+                </button>
+
+                <!-- Способ 2: Бонусные баллы -->
+                <button id="btnPayBonus" onclick="executePayment('bonus')" class="w-full bg-white hover:bg-slate-50 text-slate-800 p-4 sm:p-5 rounded-2xl border-2 border-slate-200 shadow-sm transition-all flex items-center justify-between text-left">
+                  <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
+                      <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-extrabold text-slate-800">
+                        Оплатить бонусными баллами студента
+                      </div>
+                      <div id="btnPayBonusSubtitle" class="text-xs text-slate-500 mt-1">
+                        Доступно: 150.00 баллов (1 балл = 1 ₽)
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-extrabold text-stankin-navy bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                    Списать с баланса →
+                  </span>
+                </button>
+              </div>
+
+              <div class="pt-2">
+                <button onclick="goToStep(2)" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5">
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Вернуться к настройкам документа и выбору корпуса</span>
+                </button>
+              </div>
+            </div>
 
           </div>
 
-          <!-- ШАГ 4: ЭКРАН ВЫДАЧИ ОФОРМЛЕННОГО ЗАКАЗА -->
-          <div id="stepScreen-4" class="hidden space-y-4">
-            
-            <!-- Баннер перевода заказа -->
-            <div id="reroutedOrderBanner" class="hidden bg-gradient-to-r from-amber-500 to-red-600 text-white p-3.5 rounded-2xl shadow-md text-xs space-y-1 animate-subtle">
-              <div class="font-extrabold flex items-center gap-1.5 text-sm">
+          <!-- ----------------------------------------------------------------- -->
+          <!-- ЭКРАН 4: ЭКРАН ВЫДАЧИ ОФОРМЛЕННОГО ЗАКАЗА                          -->
+          <!-- ----------------------------------------------------------------- -->
+          <div id="stepScreen-4" class="hidden space-y-6">
+
+            <!-- Баннер перевода заказа диспетчером -->
+            <div id="reroutedOrderBanner" class="hidden bg-gradient-to-r from-amber-500 to-red-600 text-white p-4 rounded-2xl shadow-md text-xs sm:text-sm space-y-1 animate-subtle">
+              <div class="font-extrabold flex items-center gap-2 text-sm sm:text-base">
                 <i class="fa-solid fa-share-nodes text-yellow-200"></i>
-                Заказ переведен на 2-й корпус!
+                <span>Заказ перенаправлен во 2-й корпус без доплат!</span>
               </div>
-              <p id="reroutedOrderBannerText" class="text-[11px] text-amber-100">
+              <p id="reroutedOrderBannerText" class="text-xs text-amber-100">
                 Диспетчер перенаправил ваш заказ во 2-й корпус. Заберите распечатку по новому коду!
               </p>
             </div>
 
-            <!-- Плашка готовности -->
-            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center space-x-2.5">
-              <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                <i class="fa-solid fa-check"></i>
-              </div>
-              <div>
-                <div class="text-xs font-bold text-emerald-800">Заказ готов к выдаче!</div>
-                <div id="pickupCampusLabel" class="text-[10px] text-emerald-700 font-semibold">Старый корпус (Терминал №1)</div>
-                <div id="pickupLocationLabel" class="text-[9px] text-slate-500">Холл 1 этажа (рядом с гардеробом)</div>
-              </div>
-            </div>
-
-            <!-- Блок с крупным QR-кодом и цифровым кодом -->
-            <div class="bg-white p-5 rounded-3xl border-2 border-slate-200 shadow-md text-center space-y-3">
+            <!-- Главная карточка выдачи с QR-кодом -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
               
-              <!-- Крупный QR-код -->
-              <div class="w-44 h-44 mx-auto bg-slate-900 p-2.5 rounded-2xl shadow-inner flex items-center justify-center relative">
-                <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
-                  <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
-                  <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
-                  <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
-
-                  <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
-                  <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
-                  <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
-
-                  <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
-                  <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
-                  <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
-
-                  <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
-                  <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
-                  <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
-                  <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
-                  <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
-
-                  <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
-                  <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
-                  <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
-                  <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
-                  <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
-                  <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
-                  <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
-
-                  <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
-                  <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
-                  <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
-                  <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
-                  <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
-                  <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
-                  <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
-                </svg>
-
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="w-8 h-8 rounded-lg bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-xs font-black shadow">
-                    СТ
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold flex-shrink-0">
+                    <i class="fa-solid fa-check"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-extrabold text-slate-800">Заказ успешно оплачен и отправлен в МФУ!</h3>
+                    <div id="pickupCampusLabel" class="text-xs font-semibold text-emerald-700 mt-0.5">Старый корпус (Терминал №1)</div>
                   </div>
                 </div>
-              </div>
-
-              <!-- Цифровой номер заказа -->
-              <div>
-                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Цифровой код получения:</div>
-                <div id="pickupCodeDisplay" class="text-3xl font-mono font-extrabold text-stankin-navy tracking-widest my-1">
-                  654-321
+                <div class="text-left sm:text-right">
+                  <span id="pickupOrderCodeLabel" class="text-xs font-mono font-bold text-stankin-navy bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                    ORD-78129
+                  </span>
+                  <div class="text-[10px] text-slate-400 mt-1">Срок действия кода: 24 часа</div>
                 </div>
-                <p class="text-[11px] text-slate-500 font-medium">
-                  Подносите QR-код к сканеру терминала или введите номер на экране
-                </p>
               </div>
 
-              <div class="border-t border-slate-100 pt-2 text-[10px] text-slate-400 flex justify-between">
-                <span id="pickupOrderCodeLabel">Заказ: ORD-78129</span>
-                <span>Срок действия: 24 часа</span>
+              <!-- Блок QR-кода и цифрового кода -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                
+                <!-- QR-код -->
+                <div class="flex flex-col items-center justify-center">
+                  <div class="w-52 h-52 bg-slate-900 p-3 rounded-2xl shadow-md flex items-center justify-center relative">
+                    <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
+                      <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+                      <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+                      <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
+
+                      <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+                      <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+                      <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
+
+                      <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
+                      <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
+                      <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
+
+                      <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
+                      <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
+                      <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
+                      <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
+                      <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
+
+                      <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
+                      <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
+                      <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
+                      <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
+                      <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
+                      <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
+                      <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
+
+                      <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
+                      <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
+                      <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
+                      <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
+                      <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
+                      <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
+                      <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="w-10 h-10 rounded-xl bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-xs font-black shadow">
+                        СТ
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-[11px] text-slate-400 mt-2 font-medium">Покажите QR-код сканеру терминала</span>
+                </div>
+
+                <!-- Цифровой код получения -->
+                <div class="space-y-3 text-center md:text-left">
+                  <div>
+                    <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Цифровой код выдачи:</span>
+                    <div id="pickupCodeDisplay" class="text-4xl sm:text-5xl font-mono font-extrabold text-stankin-navy tracking-widest my-2">
+                      654-321
+                    </div>
+                    <p class="text-xs text-slate-600">
+                      Введите этот код на сенсорном экране МФУ, если сканер QR-кода недоступен.
+                    </p>
+                  </div>
+
+                  <div class="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+                    <div><b>Место получения:</b> <span id="pickupLocationLabel">Холл 1 этажа (рядом с гардеробом)</span></div>
+                    <div><b>Правило выдачи:</b> печать начнется автоматически сразу после ввода кода.</div>
+                  </div>
+                </div>
+
               </div>
-            </div>
 
-            <!-- Кнопки действий -->
-            <div class="space-y-2">
-              <button onclick="openSupportWithCurrentOrder()" class="w-full bg-red-50 hover:bg-red-100 text-stankin-burgundy border border-red-300 font-bold text-xs py-3 px-4 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-sm">
-                <i class="fa-solid fa-headset text-red-600"></i>
-                <span>Проблема с этим заказом? В поддержку</span>
-              </button>
+              <!-- Кнопки действий -->
+              <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                <button onclick="goToStep(1)" class="w-full sm:w-auto flex-1 bg-stankin-navy hover:bg-stankin-lightNavy text-white font-extrabold text-xs py-3 px-5 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2">
+                  <i class="fa-solid fa-plus"></i>
+                  <span>Распечатать еще один документ</span>
+                </button>
 
-              <button onclick="goToStep(1)" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-semibold transition-colors">
-                + Распечатать еще один документ
-              </button>
+                <button onclick="openSupportWithCurrentOrder()" class="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-stankin-burgundy font-bold text-xs py-3 px-5 rounded-xl border border-red-300 transition-all flex items-center justify-center space-x-2">
+                  <i class="fa-solid fa-headset text-red-600"></i>
+                  <span>Проблема с этим заказом? В поддержку</span>
+                </button>
+              </div>
+
             </div>
 
           </div>
 
         </div>
 
-        <!-- ==================== ВКЛАДКА 2: МОИ ЗАКАЗЫ (VIEW-ORDERS) ==================== -->
-        <!-- БАГ 2: Полноценный список всех заказов студента с карточками и скрытием QR для завершенных -->
-        <div id="view-orders" class="hidden space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-extrabold text-stankin-navy">Мои заказы</h2>
-              <p class="text-[10px] text-slate-400">История и активные задания на печать</p>
-            </div>
-            <span id="studentOrdersCountBadge" class="bg-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-0.5 rounded-full">
-              Загрузка...
-            </span>
-          </div>
-
-          <!-- Контейнер карточек заказов -->
-          <div id="ordersListContainer" class="space-y-2.5">
-            <div class="p-6 text-center text-slate-400 text-xs">
-              <i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i>
-              <p>Загрузка истории заказов...</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ==================== ВКЛАДКА 3: ПОДДЕРЖКА (VIEW-SUPPORT) ==================== -->
-        <!-- БАГ 1: Обязательный выбор конкретного заказа перед подачей обращения и открытием чата -->
-        <div id="view-support" class="hidden space-y-3">
+        <!-- ================================================================= -->
+        <!-- ПРАВАЯ БОКОВАЯ КОЛОНКА (35% ШИРИНЫ - STICKY ORDER SUMMARY CARD)    -->
+        <!-- ================================================================= -->
+        <div class="lg:col-span-4 sticky top-24 space-y-4">
           
-          <!-- Форма выбора заказа и подачи обращения (Шаг A) -->
-          <div id="supportOrderSelectCard" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <div>
-              <h3 class="text-xs font-extrabold text-stankin-navy flex items-center gap-1.5">
-                <i class="fa-solid fa-headset text-stankin-burgundy"></i>
-                Обращение в диспетчерскую службу
-              </h3>
-              <p class="text-[10px] text-slate-500 mt-0.5">
-                Диспетчер: Цырулев А. А. • Компенсация 100% стоимости при сбое
-              </p>
+          <div class="bg-gradient-to-b from-stankin-deep to-stankin-navy text-white rounded-3xl p-6 shadow-xl border border-blue-900/40 space-y-5">
+            
+            <div class="border-b border-white/10 pb-3 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Расчет заказа</span>
+                <h3 class="text-base font-extrabold text-white">Детализация печати</h3>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
             </div>
 
-            <!-- БАГ 1: Выпадающий список выбора заказа -->
-            <div class="space-y-1">
-              <label class="block text-[11px] font-bold text-slate-700">
-                1. Выберите проблемный заказ:
-              </label>
-              <select id="supportOrderDropdown" onchange="onSupportOrderDropdownChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-stankin-navy">
-                <option value="">Загрузка заказов...</option>
-              </select>
+            <!-- Строки спецификации -->
+            <div class="space-y-3 text-xs">
+              
+              <div class="flex items-center justify-between">
+                <span class="text-slate-300">Стоимость 1 страницы:</span>
+                <span class="font-mono font-bold text-white">3.00 ₽</span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-slate-300">Объем документа:</span>
+                <span id="step2PageCountCost" class="font-bold text-white">20 стр. × 3.00 ₽</span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-slate-300">Корпус получения:</span>
+                <span id="step3OrderSummary" class="font-bold text-amber-300 truncate max-w-[160px]">Старый корпус</span>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-slate-300">Студенческая льгота:</span>
+                <span class="text-emerald-400 font-extrabold bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px]">
+                  Субсидия 100%
+                </span>
+              </div>
+
             </div>
 
-            <!-- Детали выбранного заказа -->
-            <div id="supportOrderDetailsBox" class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1.5">
-              <div class="flex justify-between items-center">
-                <span class="text-slate-500">Документ:</span>
-                <span id="supDetFileName" class="font-bold text-slate-800 truncate max-w-[170px]">—</span>
+            <!-- Итоговая стоимость -->
+            <div class="pt-4 border-t border-white/10 flex items-baseline justify-between">
+              <div>
+                <div class="text-[10px] uppercase font-bold text-slate-300">Итого к оплате:</div>
+                <div class="text-[10px] text-slate-400">Включая НДС и бумагу</div>
               </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-500">Стоимость заказа:</span>
-                <span id="supDetCost" class="font-extrabold text-stankin-navy">0.00 ₽</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-500">Площадка МФУ:</span>
-                <span id="supDetTerminal" class="font-semibold text-slate-700">—</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-500">Статус заказа:</span>
-                <span id="supDetStatus" class="font-bold text-emerald-700">—</span>
+              <div id="step2TotalCost" class="text-3xl font-extrabold text-amber-300 font-mono">
+                60.00 ₽
               </div>
             </div>
 
-            <!-- Кнопка быстрой фиксации замятия (E-04) по выбранному заказу -->
-            <button onclick="submitReportJamWithSelectedOrder()" class="w-full bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl shadow transition-all flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
-              <span>Зажевало бумагу! (Ошибка E-04)</span>
+            <!-- Главная кнопка действия (CTA Button) -->
+            <button id="btnProceedToPayment" onclick="handlePrimaryCtaClick()" class="w-full bg-gradient-to-r from-red-600 to-stankin-burgundy hover:from-red-500 hover:to-red-700 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+              <span id="btnProceedToPaymentText">Перейти к оплате</span>
+              <i id="btnProceedToPaymentIcon" class="fa-solid fa-arrow-right"></i>
             </button>
 
-            <!-- Кнопка просто перейти к переписке -->
-            <button onclick="openChatViewForSelectedOrder()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 rounded-xl transition-colors flex items-center justify-center space-x-1">
-              <i class="fa-solid fa-comments"></i>
-              <span>Открыть диалог с диспетчером</span>
-            </button>
+            <!-- Гарантии сервиса -->
+            <div class="pt-2 border-t border-white/10 space-y-2 text-[11px] text-slate-300">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                <span>Гарантия возврата 100% средств при замятии</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-clock text-amber-300"></i>
+                <span>Печать без очередей по цифровому коду</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-graduation-cap text-blue-300"></i>
+                <span>Официальный сервис МГТУ «СТАНКИН»</span>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Блок самого чата (активируется при открытом тикете) -->
-          <div id="supportChatContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[400px]">
-            <!-- Шапка чата -->
-            <div class="bg-stankin-navy text-white p-3 flex items-center justify-between">
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 2: МОИ ЗАКАЗЫ (VIEW-ORDERS)                                       -->
+    <!-- ========================================================================= -->
+    <div id="view-orders" class="hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-stankin-navy flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-stankin-burgundy"></i>
+            История заказов студента
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Все отправленные задания, статусы печати и пин-коды для получения</p>
+        </div>
+        <div>
+          <span id="studentOrdersCountBadge" class="bg-blue-50 text-stankin-navy border border-blue-200 font-bold text-xs px-3 py-1.5 rounded-xl">
+            Загрузка заказов...
+          </span>
+        </div>
+      </div>
+
+      <!-- Контейнер карточек заказов -->
+      <div id="ordersListContainer" class="space-y-3">
+        <div class="p-12 text-center text-slate-400 text-sm bg-white rounded-2xl border border-slate-200">
+          <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-stankin-navy"></i>
+          <p>Загрузка реестра ваших заказов...</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 3: ПОДДЕРЖКА (VIEW-SUPPORT)                                       -->
+    <!-- ========================================================================= -->
+    <div id="view-support" class="hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-stankin-navy flex items-center gap-2">
+            <i class="fa-solid fa-headset text-stankin-burgundy"></i>
+            Диспетчерская служба техподдержки
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Дежурный диспетчер: <b>Цырулев А. А.</b> • Мгновенная компенсация 100% стоимости или перевод на 2-й корпус
+          </p>
+        </div>
+        <div class="flex items-center space-x-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>Диспетчер онлайн</span>
+        </div>
+      </div>
+
+      <!-- Двухколоночный десктопный вид поддержки -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Левая колонка: Форма выбора проблемного заказа (4/12) -->
+        <div id="supportOrderSelectCard" class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div>
+            <h3 class="text-sm font-extrabold text-stankin-navy">
+              1. Выберите проблемный заказ:
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Связывание обращения со сбойным заказом обязательно для начисления компенсации
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <select id="supportOrderDropdown" onchange="onSupportOrderDropdownChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-stankin-navy">
+              <option value="">Загрузка заказов...</option>
+            </select>
+          </div>
+
+          <!-- Детали выбранного заказа -->
+          <div id="supportOrderDetailsBox" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500">Документ:</span>
+              <span id="supDetFileName" class="font-bold text-slate-800 truncate max-w-[190px]">—</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500">Стоимость заказа:</span>
+              <span id="supDetCost" class="font-mono font-extrabold text-stankin-navy">0.00 ₽</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500">Площадка МФУ:</span>
+              <span id="supDetTerminal" class="font-semibold text-slate-700">—</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500">Статус заказа:</span>
+              <span id="supDetStatus" class="font-bold text-emerald-700">—</span>
+            </div>
+          </div>
+
+          <!-- Кнопка быстрой фиксации замятия (E-04) по выбранному заказу -->
+          <button onclick="submitReportJamWithSelectedOrder()" class="w-full bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+            <span>Зажевало бумагу! (Ошибка E-04)</span>
+          </button>
+
+          <!-- Кнопка перехода к диалогу -->
+          <button onclick="openChatViewForSelectedOrder()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-colors flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-comments"></i>
+            <span>Открыть диалог с диспетчером</span>
+          </button>
+        </div>
+
+        <!-- Правая колонка: Окно переписки с диспетчером (7/12) -->
+        <div id="supportChatContainer" class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[520px]">
+          
+          <!-- Шапка чата -->
+          <div class="bg-stankin-navy text-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-stankin-burgundy flex items-center justify-center text-sm font-bold text-white shadow-xs">
+                <i class="fa-solid fa-headset"></i>
+              </div>
               <div>
                 <div class="text-xs font-bold flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                   <span id="chatTicketTitle">Чат по тикету</span>
                 </div>
-                <div id="chatLinkedOrderLabel" class="text-[10px] text-slate-300">Заказ: ORD-78129</div>
+                <div id="chatLinkedOrderLabel" class="text-[11px] text-slate-300">Заказ: ORD-78129</div>
               </div>
-              <button onclick="closeChatBackToSelect()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-slate-200">
-                Сменить заказ
-              </button>
             </div>
-
-            <!-- Сообщения чата -->
-            <div id="supportChatMessagesArea" class="flex-1 p-3 overflow-y-auto space-y-2 bg-slate-50/70 text-xs">
-              <div class="text-center text-slate-400 text-xs p-4">Загрузка переписки...</div>
-            </div>
-
-            <!-- Ввод ответа студента -->
-            <form onsubmit="sendStudentSupportMessage(event)" class="p-2 border-t border-slate-200 bg-white flex items-center space-x-1.5">
-              <input type="text" id="supMessageInput" placeholder="Напишите диспетчеру Цырулеву А. А...." class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-stankin-navy">
-              <button type="submit" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white px-3 py-2 rounded-xl text-xs font-bold transition-all shadow">
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
-            </form>
-          </div>
-
-        </div>
-
-      </main>
-
-      <!-- ПЛАШКА НАВИГАЦИИ СНИЗУ ТЕЛЕФОНА (3 ВКЛАДКИ) -->
-      <footer class="bg-white border-t border-slate-200 p-1.5 flex items-center justify-between text-xs text-slate-500">
-        <button onclick="switchClientNav('print')" id="clientNavBtn-print" class="flex-1 py-1 text-center font-bold text-stankin-navy flex flex-col items-center">
-          <i class="fa-solid fa-print mb-0.5 text-sm"></i>
-          <span class="text-[10px]">Печать</span>
-        </button>
-
-        <button onclick="switchClientNav('orders')" id="clientNavBtn-orders" class="flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-navy flex flex-col items-center relative">
-          <i class="fa-solid fa-receipt mb-0.5 text-sm"></i>
-          <span class="text-[10px]">Мои заказы</span>
-          <span id="navOrdersBadge" class="hidden absolute top-0 right-6 w-2 h-2 rounded-full bg-emerald-500"></span>
-        </button>
-
-        <button onclick="switchClientNav('support')" id="clientNavBtn-support" class="flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-burgundy flex flex-col items-center">
-          <i class="fa-solid fa-headset mb-0.5 text-sm"></i>
-          <span class="text-[10px]">Поддержка</span>
-        </button>
-      </footer>
-
-      <!-- HOME INDICATOR ВНИЗУ ЭКРАНА -->
-      <div class="w-32 h-1 bg-slate-300 rounded-full mx-auto my-1"></div>
-
-      <!-- ==================== МОДАЛЬНОЕ ОКНО: ПРЕФЛАЙТ ГОСТ 7.32 (ЛОАДЕР) ==================== -->
-      <div id="preflightModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-6 text-white text-center">
-        <div class="w-16 h-16 rounded-2xl bg-stankin-navy border border-blue-400/40 flex items-center justify-center text-2xl mb-4 text-amber-400 animate-spin">
-          <i class="fa-solid fa-gear"></i>
-        </div>
-        <h3 class="text-sm font-extrabold text-white">Префлайт ГОСТ 7.32...</h3>
-        <p class="text-[11px] text-slate-300 mt-1 max-w-xs">
-          Проверка полей (20-10-10-30 мм), шрифтов и ориентации листов
-        </p>
-        <div class="w-full bg-slate-700 rounded-full h-2 mt-4 overflow-hidden">
-          <div id="preflightProgressBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-2 rounded-full w-0 transition-all duration-700"></div>
-        </div>
-        <div id="preflightStatusText" class="text-[10px] text-emerald-400 font-semibold mt-2">
-          Анализ документа...
-        </div>
-      </div>
-
-      <!-- ==================== МОДАЛЬНОЕ ОКНО: ОПЛАТА СБП (ЛОАДЕР) ==================== -->
-      <div id="paymentModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-6 text-white text-center">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-600 border border-emerald-400 flex items-center justify-center text-2xl mb-4 text-white animate-pulse">
-          <i class="fa-solid fa-receipt"></i>
-        </div>
-        <h3 id="paymentModalTitle" class="text-sm font-extrabold text-white">Авторизация в СБП...</h3>
-        <p class="text-[11px] text-slate-300 mt-1">
-          Мгновенное подтверждение транзакции через шлюз МГТУ СТАНКИН
-        </p>
-        <div class="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mt-4"></div>
-      </div>
-
-      <!-- ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА QR-КОДА ЗАКАЗА ==================== -->
-      <div id="orderQrModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-5 max-w-xs w-full text-center space-y-3 shadow-2xl">
-          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-            <span id="qrModalOrderCode" class="text-xs font-mono font-bold text-stankin-navy">ORD-78129</span>
-            <button onclick="closeOrderQrModal()" class="text-slate-400 hover:text-slate-600 text-sm p-1">
-              <i class="fa-solid fa-xmark"></i>
+            <button onclick="closeChatBackToSelect()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-slate-200 font-semibold transition-colors">
+              Выбрать другой заказ
             </button>
           </div>
 
-          <div class="w-40 h-40 mx-auto bg-slate-900 p-2 rounded-2xl shadow-inner flex items-center justify-center relative">
-            <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
-              <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
-              <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
-              <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
-
-              <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
-              <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
-              <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
-
-              <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
-              <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
-              <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
-
-              <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
-              <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
-              <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
-              <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
-              <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
-
-              <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
-              <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
-              <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
-              <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
-              <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
-              <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
-              <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
-
-              <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
-              <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
-              <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
-              <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
-              <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
-              <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
-              <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-7 h-7 rounded-lg bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-[10px] font-black shadow">
-                СТ
-              </div>
-            </div>
+          <!-- Сообщения чата -->
+          <div id="supportChatMessagesArea" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/70 text-xs">
+            <div class="text-center text-slate-400 text-xs p-8">Загрузка переписки...</div>
           </div>
 
-          <div>
-            <div class="text-[10px] text-slate-400 font-semibold">Пин-код выдачи:</div>
-            <div id="qrModalPickupCode" class="text-2xl font-mono font-extrabold text-stankin-navy">654-321</div>
-            <div id="qrModalCampus" class="text-[10px] text-slate-500 mt-0.5">Новый корпус (Терминал №2)</div>
-          </div>
+          <!-- Ввод сообщения студентом -->
+          <form onsubmit="sendStudentSupportMessage(event)" class="p-3 border-t border-slate-200 bg-white flex items-center space-x-2">
+            <input type="text" id="supMessageInput" placeholder="Напишите диспетчеру Цырулеву А. А...." class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-stankin-navy font-medium">
+            <button type="submit" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center space-x-1.5">
+              <span>Отправить</span>
+              <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            </button>
+          </form>
 
-          <button onclick="closeOrderQrModal()" class="w-full bg-stankin-navy text-white text-xs py-2 rounded-xl font-bold">
-            Закрыть
-          </button>
         </div>
+
       </div>
 
     </div>
 
+  </main>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ПРЕФЛАЙТ / ПОДГОТОВКА ДОКУМЕНТА ==================== -->
+  <div id="preflightModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4 text-white text-center">
+    <div class="bg-slate-900 border border-slate-700 max-w-sm w-full p-8 rounded-3xl shadow-2xl flex flex-col items-center">
+      <div id="preflightIconBox" class="w-16 h-16 rounded-2xl bg-stankin-navy border border-blue-400/40 flex items-center justify-center text-2xl mb-4 text-amber-400 animate-spin">
+        <i id="preflightIcon" class="fa-solid fa-gear"></i>
+      </div>
+      <h3 id="preflightTitle" class="text-base font-extrabold text-white">Префлайт ГОСТ 7.32...</h3>
+      <p id="preflightSubtitle" class="text-xs text-slate-300 mt-1.5">
+        Проверка полей (20-10-10-30 мм), шрифтов и ориентации листов
+      </p>
+      <div class="w-full bg-slate-800 rounded-full h-2.5 mt-5 overflow-hidden">
+        <div id="preflightProgressBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-2.5 rounded-full w-0 transition-all duration-700"></div>
+      </div>
+      <div id="preflightStatusText" class="text-xs text-emerald-400 font-semibold mt-3">
+        Анализ документа...
+      </div>
+    </div>
   </div>
 
-  <!-- JAVASCRIPT ЛОГИКА -->
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ОПЛАТА СБП (ЛОАДЕР) ==================== -->
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4 text-white text-center">
+    <div class="bg-slate-900 border border-slate-700 max-w-sm w-full p-8 rounded-3xl shadow-2xl flex flex-col items-center">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-600 border border-emerald-400 flex items-center justify-center text-2xl mb-4 text-white animate-pulse">
+        <i class="fa-solid fa-receipt"></i>
+      </div>
+      <h3 id="paymentModalTitle" class="text-base font-extrabold text-white">Авторизация в СБП...</h3>
+      <p class="text-xs text-slate-300 mt-1.5">
+        Мгновенное подтверждение транзакции через шлюз МГТУ СТАНКИН
+      </p>
+      <div class="w-9 h-9 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin mt-5"></div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА QR-КОДА ЗАКАЗА ==================== -->
+  <div id="orderQrModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl border border-slate-200">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <span id="qrModalOrderCode" class="text-xs font-mono font-bold text-stankin-navy">ORD-78129</span>
+        <button onclick="closeOrderQrModal()" class="text-slate-400 hover:text-slate-600 text-sm p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="w-48 h-48 mx-auto bg-slate-900 p-2.5 rounded-2xl shadow-inner flex items-center justify-center relative">
+        <svg viewBox="0 0 100 100" class="w-full h-full text-white fill-current">
+          <rect x="5" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+          <rect x="9" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+          <rect x="13" y="13" width="10" height="10" fill="#ffffff" />
+
+          <rect x="69" y="5" width="26" height="26" rx="4" fill="#ffffff" />
+          <rect x="73" y="9" width="18" height="18" rx="2" fill="#0D2040" />
+          <rect x="77" y="13" width="10" height="10" fill="#ffffff" />
+
+          <rect x="5" y="69" width="26" height="26" rx="4" fill="#ffffff" />
+          <rect x="9" y="73" width="18" height="18" rx="2" fill="#0D2040" />
+          <rect x="13" y="77" width="10" height="10" fill="#ffffff" />
+
+          <rect x="36" y="8" width="6" height="6" fill="#ffffff" />
+          <rect x="46" y="8" width="6" height="6" fill="#ffffff" />
+          <rect x="56" y="14" width="6" height="6" fill="#ffffff" />
+          <rect x="36" y="22" width="6" height="6" fill="#ffffff" />
+          <rect x="50" y="24" width="8" height="8" fill="#BA1B1D" />
+
+          <rect x="8" y="38" width="6" height="6" fill="#ffffff" />
+          <rect x="20" y="44" width="8" height="8" fill="#ffffff" />
+          <rect x="34" y="36" width="6" height="6" fill="#ffffff" />
+          <rect x="44" y="42" width="12" height="12" rx="2" fill="#D97706" />
+          <rect x="62" y="36" width="6" height="6" fill="#ffffff" />
+          <rect x="74" y="40" width="8" height="8" fill="#ffffff" />
+          <rect x="88" y="44" width="6" height="6" fill="#ffffff" />
+
+          <rect x="36" y="68" width="6" height="6" fill="#ffffff" />
+          <rect x="46" y="74" width="8" height="8" fill="#ffffff" />
+          <rect x="58" y="68" width="6" height="6" fill="#ffffff" />
+          <rect x="68" y="78" width="8" height="8" fill="#ffffff" />
+          <rect x="82" y="70" width="6" height="6" fill="#ffffff" />
+          <rect x="74" y="86" width="6" height="6" fill="#ffffff" />
+          <rect x="40" y="86" width="8" height="8" fill="#ffffff" />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-stankin-navy border-2 border-white flex items-center justify-center text-white text-xs font-black shadow">
+            СТ
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs text-slate-400 font-semibold">Пин-код выдачи:</div>
+        <div id="qrModalPickupCode" class="text-3xl font-mono font-extrabold text-stankin-navy mt-1">654-321</div>
+        <div id="qrModalCampus" class="text-xs text-slate-500 mt-1">Новый корпус (Терминал №2)</div>
+      </div>
+
+      <button onclick="closeOrderQrModal()" class="w-full bg-stankin-navy hover:bg-stankin-lightNavy text-white text-xs py-3 rounded-xl font-bold transition-all">
+        Закрыть окно
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ЛОГИКА ==================== -->
   <script>
     let activeClientTab = 'print'; // 'print', 'orders', 'support'
     let currentStep = 1;
     let selectedFile = 'Курсовой_проект_Детали_машин.pdf';
     let selectedPages = 20;
-    let selectedTerminalId = 1;
+    let selectedTerminalId = 2; // По умолчанию выбран рабочий Терминал №2 (Новый корпус)
     let currentOrderCode = 'ORD-78129';
     let currentPickupCode = '654-321';
     let studentUser = { id: 1, full_name: 'Иванов М. В.', group_code: 'ИДБ-25-15', balance_rub: 150.0 };
     let studentOrdersCache = [];
     let terminalsCache = [];
     let activeTicket = null;
+    let isGostMode = true; // Режим: true - оформление по ГОСТ 7.32, false - стандартная печать
 
     document.addEventListener('DOMContentLoaded', () => {
-      updatePhoneClock();
-      setInterval(updatePhoneClock, 1000);
-
       fetchStudentProfile();
       fetchTerminalStatuses();
       fetchStudentOrders();
@@ -718,39 +1024,32 @@
       }, 3000);
     });
 
-    function updatePhoneClock() {
-      const d = new Date();
-      const h = String(d.getHours()).padStart(2, '0');
-      const m = String(d.getMinutes()).padStart(2, '0');
-      const el = document.getElementById('phoneClock');
-      if (el) el.innerText = `${h}:${m}`;
-    }
-
-    // Переключение главных вкладок футера
+    // Переключение главных десктопных вкладок навигации
     function switchClientNav(tabName) {
       activeClientTab = tabName;
       ['print', 'orders', 'support'].forEach(t => {
         const view = document.getElementById(`view-${t}`);
         const btn = document.getElementById(`clientNavBtn-${t}`);
+        const mBtn = document.getElementById(`clientMobileNavBtn-${t}`);
+        
         if (t === tabName) {
           if (view) view.classList.remove('hidden');
           if (btn) {
-            btn.className = 'flex-1 py-1 text-center font-bold text-stankin-navy flex flex-col items-center';
+            btn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 bg-white text-stankin-navy shadow-sm';
+          }
+          if (mBtn) {
+            mBtn.className = 'px-3 py-1 rounded-lg font-bold bg-white text-stankin-navy flex items-center space-x-1.5';
           }
         } else {
           if (view) view.classList.add('hidden');
           if (btn) {
-            btn.className = 'flex-1 py-1 text-center font-semibold text-slate-500 hover:text-stankin-navy flex flex-col items-center';
+            btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center space-x-2';
+          }
+          if (mBtn) {
+            mBtn.className = 'px-3 py-1 rounded-lg font-medium text-slate-300 flex items-center space-x-1.5';
           }
         }
       });
-
-      // Скрываем индикатор шагов, если не на вкладке 'print'
-      const stepsBar = document.getElementById('printWizardSteps');
-      if (stepsBar) {
-        if (tabName === 'print') stepsBar.classList.remove('hidden');
-        else stepsBar.classList.add('hidden');
-      }
 
       if (tabName === 'orders') {
         fetchStudentOrders();
@@ -767,8 +1066,11 @@
         const res = await fetch('/api/client/user?user_id=1');
         if (res.ok) {
           studentUser = await res.json();
-          document.getElementById('studentProfileName').innerText = `${studentUser.full_name} (${studentUser.group_code})`;
-          document.getElementById('studentBalanceBadge').innerText = `${studentUser.balance_rub.toFixed(2)} ₽`;
+          const nameEl = document.getElementById('studentProfileName');
+          if (nameEl) nameEl.innerText = `${studentUser.full_name}`;
+          
+          const balEl = document.getElementById('studentBalanceBadge');
+          if (balEl) balEl.innerText = `${studentUser.balance_rub.toFixed(2)} ₽`;
           
           const bonusSub = document.getElementById('btnPayBonusSubtitle');
           if (bonusSub) {
@@ -780,7 +1082,7 @@
       }
     }
 
-    // БАГ 2: Загрузка всех заказов студента и рендеринг вкладки «Мои заказы»
+    // Загрузка всех заказов студента
     async function fetchStudentOrders() {
       try {
         const res = await fetch('/api/client/orders?user_id=1');
@@ -790,7 +1092,7 @@
           renderStudentOrdersList(studentOrdersCache);
           populateSupportOrderDropdown();
           
-          // Проверяем актуальный заказ для экрана выдачи
+          // Актуальный заказ для экрана выдачи
           if (studentOrdersCache.length > 0) {
             const latest = studentOrdersCache[0];
             updatePickupScreenWithOrder(latest);
@@ -811,9 +1113,10 @@
 
       if (orders.length === 0) {
         container.innerHTML = `
-          <div class="p-8 text-center text-slate-400 text-xs bg-white rounded-2xl border border-slate-200">
-            <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
-            <p>У вас пока нет оформленных заказов</p>
+          <div class="p-12 text-center text-slate-400 text-sm bg-white rounded-2xl border border-slate-200">
+            <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
+            <p class="font-bold text-slate-600">У вас пока нет оформленных заказов</p>
+            <p class="text-xs text-slate-400 mt-1">Оформите первую печать на вкладке «Печать документов»</p>
           </div>
         `;
         return;
@@ -824,61 +1127,77 @@
         const isCompleted = o.order_status === 'Завершен';
         const isError = o.order_status === 'Ошибка печати';
         const isRerouted = o.order_status === 'Перенаправлен';
-        const isReady = o.order_status === 'Готов к выдаче' || o.order_status === 'В очереди';
 
         let badgeHtml = '';
         if (isCancelled) {
-          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">💰 Средства возвращены (100%)</span>';
+          badgeHtml = '<span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">💰 Средства возвращены (100%)</span>';
         } else if (isCompleted) {
-          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">✓ Завершен</span>';
+          badgeHtml = '<span class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600">✓ Завершен</span>';
         } else if (isError) {
-          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse">⚠️ Сбой печати (E-04)</span>';
+          badgeHtml = '<span class="text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-700 animate-pulse border border-red-300">⚠️ Сбой печати (E-04)</span>';
         } else if (isRerouted) {
-          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">🔄 Перенаправлен во 2-й корпус</span>';
+          badgeHtml = '<span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">🔄 Перенаправлен во 2-й корпус</span>';
         } else {
-          badgeHtml = '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">● Готов к выдаче</span>';
+          badgeHtml = '<span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">● Готов к выдаче</span>';
         }
 
         // Если статус 'Завершен' или 'Отменен (Возврат)' — скрываем QR-код!
         const showQrAndCode = !isCompleted && !isCancelled;
 
         return `
-          <div class="bg-white p-3.5 rounded-2xl border ${isError ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} shadow-sm space-y-2">
+          <div class="bg-white p-5 rounded-2xl border ${isError ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} shadow-sm space-y-3">
             
-            <div class="flex items-center justify-between">
-              <span class="font-mono font-extrabold text-xs text-stankin-navy">${o.order_code}</span>
-              ${badgeHtml}
-            </div>
-
-            <div>
-              <div class="text-xs font-bold text-slate-800 truncate">${o.file_name}</div>
-              <div class="text-[10px] text-slate-500 flex items-center justify-between mt-0.5">
-                <span>${o.terminal_campus} (${o.terminal_name})</span>
-                <span class="font-bold text-slate-700">${o.price_rub.toFixed(2)} ₽</span>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm text-stankin-navy bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">${o.order_code}</span>
+                <span class="text-xs text-slate-400 font-medium">${o.created_at}</span>
               </div>
-              <div class="text-[9px] text-slate-400 mt-0.5">${o.created_at} • ${o.page_count} стр.</div>
+              <div>${badgeHtml}</div>
             </div>
 
-            <!-- Блок выдачи и QR (только если заказ активен, скрыт для 'Завершен') -->
-            ${showQrAndCode ? `
-              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                <div>
-                  <div class="text-[9px] text-slate-400 font-semibold">Пин-код выдачи:</div>
-                  <div class="font-mono font-extrabold text-stankin-navy text-sm tracking-wider">${o.pickup_code || '654-321'}</div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm font-extrabold text-slate-800 truncate max-w-md">${o.file_name}</span>
+                  ${o.is_gost !== 0 
+                    ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex-shrink-0 flex items-center gap-1"><i class="fa-solid fa-stamp text-[9px]"></i>ГОСТ 7.32</span>'
+                    : '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 flex-shrink-0 flex items-center gap-1"><i class="fa-solid fa-file-lines text-[9px]"></i>Без ГОСТ</span>'
+                  }
                 </div>
-                <div class="flex items-center space-x-1.5">
-                  <button onclick="openOrderQrModal('${o.order_code}', '${o.pickup_code || '654-321'}', '${o.terminal_campus}')" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center space-x-1">
+                <div class="text-xs text-slate-500 flex items-center space-x-3">
+                  <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${o.terminal_campus} (${o.terminal_name})</span>
+                  <span>•</span>
+                  <span>${o.page_count} стр. (А4)</span>
+                </div>
+              </div>
+
+              <div class="text-left sm:text-right">
+                <span class="text-sm font-extrabold text-stankin-navy font-mono">${o.price_rub.toFixed(2)} ₽</span>
+                <div class="text-[10px] text-slate-400">Оплачено</div>
+              </div>
+            </div>
+
+            <!-- Блок выдачи и QR (активен пока заказ не завершен) -->
+            ${showQrAndCode ? `
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-3">
+                  <div class="text-xs text-slate-500 font-semibold">Пин-код для терминала:</div>
+                  <div class="font-mono font-extrabold text-stankin-navy text-lg tracking-wider bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-xs">${o.pickup_code || '654-321'}</div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button onclick="openOrderQrModal('${o.order_code}', '${o.pickup_code || '654-321'}', '${o.terminal_campus}')" class="bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-xs transition-all">
                     <i class="fa-solid fa-qrcode"></i>
-                    <span>QR-код</span>
+                    <span>Показать QR-код</span>
                   </button>
-                  <button onclick="preselectOrderForSupport(${o.id})" title="Сообщить о сбое печати" class="bg-red-50 hover:bg-red-100 text-stankin-burgundy font-bold text-[10px] px-2 py-1.5 rounded-lg border border-red-200">
+                  <button onclick="preselectOrderForSupport(${o.id})" title="Сообщить о сбое печати" class="bg-red-50 hover:bg-red-100 text-stankin-burgundy font-bold text-xs px-3 py-2 rounded-xl border border-red-200 transition-all flex items-center space-x-1">
                     <i class="fa-solid fa-headset text-red-600"></i>
+                    <span>В поддержку</span>
                   </button>
                 </div>
               </div>
             ` : `
-              <div class="bg-slate-50 px-2.5 py-1.5 rounded-lg text-[10px] text-slate-400 flex items-center justify-between">
-                <span>${isCancelled ? 'Печать отменена (возврат средств)' : 'Заказ выдан в МФУ'}</span>
+              <div class="bg-slate-50 px-3.5 py-2 rounded-xl text-xs text-slate-400 flex items-center justify-between">
+                <span>${isCancelled ? 'Печать отменена (возврат средств диспетчером)' : 'Заказ успешно выдан в терминале'}</span>
                 <span class="font-semibold text-slate-500">QR-код деактивирован</span>
               </div>
             `}
@@ -920,7 +1239,7 @@
       }
     }
 
-    // ==================== БАГ 1: ВЫБОР ЗАКАЗА ПЕРЕД ОБРАЩЕНИЕМ В ПОДДЕРЖКУ ====================
+    // ==================== ПОДДЕРЖКА И ВЫБОР ЗАКАЗА ====================
     function populateSupportOrderDropdown() {
       const select = document.getElementById('supportOrderDropdown');
       if (!select) return;
@@ -968,7 +1287,6 @@
       }
     }
 
-    // БАГ 1: Отправка сигнала о замятии (E-04) с выбранным order_id
     async function submitReportJamWithSelectedOrder() {
       const select = document.getElementById('supportOrderDropdown');
       const orderId = parseInt(select.value);
@@ -998,7 +1316,7 @@
           renderChatView(activeTicket);
           fetchTerminalStatuses();
           fetchStudentOrders();
-          alert('Сообщение о сбое E-04 по заказу передано диспетчеру Цырулеву А. А.!');
+          alert('Сообщение о сбое E-04 передано дежурному диспетчеру Цырулеву А. А.!');
         } else {
           alert(data.detail || 'Ошибка отправки обращения');
         }
@@ -1035,8 +1353,8 @@
     function renderChatView(ticket) {
       if (!ticket) return;
 
-      document.getElementById('supportOrderSelectCard').classList.add('hidden');
-      document.getElementById('supportChatContainer').classList.remove('hidden');
+      const chatContainer = document.getElementById('supportChatContainer');
+      if (chatContainer) chatContainer.classList.remove('hidden');
 
       document.getElementById('chatTicketTitle').innerText = `${ticket.ticket_number} • ${ticket.status}`;
       document.getElementById('chatLinkedOrderLabel').innerText = 
@@ -1046,7 +1364,7 @@
       if (!container) return;
 
       if (!ticket.messages || ticket.messages.length === 0) {
-        container.innerHTML = '<div class="text-center text-slate-400 text-xs p-4">Нет сообщений</div>';
+        container.innerHTML = '<div class="text-center text-slate-400 text-xs p-6">Нет сообщений в диалоге</div>';
         return;
       }
 
@@ -1054,19 +1372,19 @@
         if (m.sender_type === 'dispatcher') {
           return `
             <div class="flex justify-start">
-              <div class="bg-stankin-navy text-white text-[11px] rounded-2xl rounded-tl-none p-2.5 max-w-[85%] shadow-sm space-y-1">
+              <div class="bg-stankin-navy text-white text-xs rounded-2xl rounded-tl-none p-3.5 max-w-[85%] shadow-sm space-y-1">
                 <div class="font-bold text-amber-300 flex items-center justify-between">
                   <span>${m.sender_name}</span>
                   <i class="fa-solid fa-headset text-slate-300 ml-1"></i>
                 </div>
                 <div class="whitespace-pre-line text-slate-100">${m.message}</div>
-                <div class="text-[9px] text-slate-300 text-right">${m.created_at}</div>
+                <div class="text-[10px] text-slate-300 text-right">${m.created_at}</div>
               </div>
             </div>
           `;
         } else if (m.sender_type === 'system') {
           return `
-            <div class="bg-amber-50 border border-amber-200 text-amber-900 text-[10px] p-2 rounded-xl text-center space-y-0.5 shadow-sm">
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 text-xs p-2.5 rounded-xl text-center space-y-0.5 shadow-xs">
               <div class="font-bold text-amber-800"><i class="fa-solid fa-shield-halved mr-1"></i> ${m.sender_name}</div>
               <div class="whitespace-pre-line">${m.message}</div>
             </div>
@@ -1074,10 +1392,10 @@
         } else {
           return `
             <div class="flex justify-end">
-              <div class="bg-white border border-slate-200 text-slate-800 text-[11px] rounded-2xl rounded-tr-none p-2.5 max-w-[85%] shadow-sm space-y-1">
+              <div class="bg-white border border-slate-200 text-slate-800 text-xs rounded-2xl rounded-tr-none p-3.5 max-w-[85%] shadow-sm space-y-1">
                 <div class="font-bold text-stankin-lightNavy text-right">${m.sender_name}</div>
                 <div class="whitespace-pre-line">${m.message}</div>
-                <div class="text-[9px] text-slate-400 text-right">${m.created_at}</div>
+                <div class="text-[10px] text-slate-400 text-right">${m.created_at}</div>
               </div>
             </div>
           `;
@@ -1126,16 +1444,16 @@
           if (b1 && t1) {
             b1.innerText = t1.status;
             b1.className = t1.status === 'Онлайн' 
-              ? 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
-              : 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
+              ? 'text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
+              : 'text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
           }
 
           const b2 = document.getElementById('termStatusBadge2');
           if (b2 && t2) {
             b2.innerText = t2.status;
             b2.className = t2.status === 'Онлайн' 
-              ? 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
-              : 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
+              ? 'text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700' 
+              : 'text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse';
           }
 
           checkSelectedTerminalAvailability();
@@ -1169,7 +1487,7 @@
         }
         if (btnProceed) {
           btnProceed.disabled = true;
-          btnProceed.className = 'w-full bg-slate-300 text-slate-500 font-bold text-xs py-3 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed opacity-75';
+          btnProceed.className = 'w-full bg-slate-300 text-slate-500 font-bold text-xs sm:text-sm py-3.5 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed opacity-75';
         }
         if (btnText) btnText.innerText = 'Терминал временно не работает';
         if (btnIcon) btnIcon.className = 'fa-solid fa-ban';
@@ -1181,9 +1499,11 @@
         if (warningBanner) warningBanner.classList.add('hidden');
         if (btnProceed) {
           btnProceed.disabled = false;
-          btnProceed.className = 'w-full bg-stankin-navy hover:bg-stankin-lightNavy text-white font-bold text-xs py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 cursor-pointer';
+          btnProceed.className = 'w-full bg-gradient-to-r from-red-600 to-stankin-burgundy hover:from-red-500 hover:to-red-700 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 cursor-pointer';
         }
-        if (btnText) btnText.innerText = 'Перейти к оплате';
+        if (btnText) {
+          btnText.innerText = currentStep === 1 ? 'Загрузить документ' : (currentStep === 2 ? 'Перейти к оплате' : 'Оплатить через СБП');
+        }
         if (btnIcon) btnIcon.className = 'fa-solid fa-arrow-right';
 
         if (paymentWarning) paymentWarning.classList.add('hidden');
@@ -1192,12 +1512,82 @@
       }
     }
 
+    function handlePrimaryCtaClick() {
+      if (currentStep === 1) {
+        startPreflight(selectedFile, selectedPages);
+      } else if (currentStep === 2) {
+        goToStep(3);
+      } else if (currentStep === 3) {
+        executePayment('sbp');
+      } else if (currentStep === 4) {
+        goToStep(1);
+      }
+    }
+
     function openSupportWithCurrentOrder() {
       switchClientNav('support');
       populateSupportOrderDropdown();
     }
 
-    // Префлайт ГОСТ
+    // Режим оформления: ГОСТ или Обычная печать
+    function setGostMode(enable) {
+      isGostMode = Boolean(enable);
+
+      const tTrue = document.getElementById('toggleGostTrue');
+      const tFalse = document.getElementById('toggleGostFalse');
+      const s1Badge = document.getElementById('step1GostBadge');
+      const s1Hint = document.getElementById('step1GostHint');
+
+      if (isGostMode) {
+        if (tTrue) tTrue.className = 'p-4 rounded-xl border-2 border-stankin-navy bg-blue-50/70 text-left transition-all shadow-sm flex items-start space-x-3.5';
+        if (tFalse) tFalse.className = 'p-4 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition-all flex items-start space-x-3.5';
+        if (s1Badge) {
+          s1Badge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+          s1Badge.innerText = 'ГОСТ 7.32';
+        }
+        if (s1Hint) {
+          s1Hint.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i><span>При загрузке будет выполнен автоматический префлайт ГОСТ 7.32 со сверкой полей и шрифтов</span>';
+        }
+      } else {
+        if (tTrue) tTrue.className = 'p-4 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition-all flex items-start space-x-3.5';
+        if (tFalse) tFalse.className = 'p-4 rounded-xl border-2 border-slate-700 bg-slate-100 text-left transition-all shadow-sm flex items-start space-x-3.5';
+        if (s1Badge) {
+          s1Badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-slate-200 text-slate-700';
+          s1Badge.innerText = 'Обычная печать';
+        }
+        if (s1Hint) {
+          s1Hint.innerHTML = '<i class="fa-solid fa-circle-info text-blue-600 text-sm"></i><span>Оригинальная разметка файла сохраняется без изменения полей и шрифтов</span>';
+        }
+      }
+
+      const s2Badge = document.getElementById('step2GostBadge');
+      const s2BtnYes = document.getElementById('step2GostBtnYes');
+      const s2BtnNo = document.getElementById('step2GostBtnNo');
+
+      if (s2Badge) {
+        if (isGostMode) {
+          s2Badge.className = 'text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full font-bold text-[10px] flex items-center gap-1';
+          s2Badge.innerHTML = '<i class="fa-solid fa-stamp text-emerald-600"></i> ГОСТ 7.32 пройден';
+        } else {
+          s2Badge.className = 'text-slate-700 bg-slate-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] flex items-center gap-1';
+          s2Badge.innerHTML = '<i class="fa-solid fa-file-lines text-slate-500"></i> Без ГОСТ (Оригинал)';
+        }
+      }
+
+      if (s2BtnYes && s2BtnNo) {
+        if (isGostMode) {
+          s2BtnYes.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-stankin-navy text-white shadow-sm transition-all';
+          s2BtnNo.className = 'px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all';
+        } else {
+          s2BtnYes.className = 'px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all';
+          s2BtnNo.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition-all';
+        }
+      }
+
+      updateSelectedCampus(selectedTerminalId);
+    }
+
+    // Префлайт (ГОСТ или Стандартный анализ)
     function startPreflight(fileName, pages) {
       selectedFile = fileName;
       selectedPages = pages;
@@ -1205,41 +1595,73 @@
       const modal = document.getElementById('preflightModal');
       const bar = document.getElementById('preflightProgressBar');
       const statusText = document.getElementById('preflightStatusText');
+      const title = document.getElementById('preflightTitle');
+      const subtitle = document.getElementById('preflightSubtitle');
 
       modal.classList.remove('hidden');
-      bar.style.width = '10%';
-      statusText.innerText = 'Проверка полей ГОСТ (20-10-10-30 мм)...';
 
-      setTimeout(() => {
-        bar.style.width = '50%';
-        statusText.innerText = 'Проверка шрифтов Times New Roman 14 pt...';
-      }, 500);
+      if (isGostMode) {
+        if (title) title.innerText = 'Префлайт ГОСТ 7.32...';
+        if (subtitle) subtitle.innerText = 'Проверка полей (20-10-10-30 мм), шрифтов и ориентации листов';
+        bar.style.width = '15%';
+        statusText.innerText = 'Проверка полей ГОСТ (20-10-10-30 мм)...';
 
-      setTimeout(() => {
-        bar.style.width = '85%';
-        statusText.innerText = 'Проверка нумерации страниц...';
-      }, 1000);
+        setTimeout(() => {
+          bar.style.width = '55%';
+          statusText.innerText = 'Проверка шрифтов Times New Roman 14 pt...';
+        }, 400);
 
-      setTimeout(() => {
-        bar.style.width = '100%';
-        statusText.innerText = '✓ ГОСТ 7.32 успешно подтвержден!';
-      }, 1400);
+        setTimeout(() => {
+          bar.style.width = '85%';
+          statusText.innerText = 'Проверка нумерации страниц и рамок...';
+        }, 800);
 
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        bar.style.width = '0%';
-        
-        const cost = (selectedPages * 3.0).toFixed(2);
-        document.getElementById('step2FileName').innerText = selectedFile;
-        document.getElementById('step2PageCount').innerText = `${selectedPages} страниц`;
-        document.getElementById('step2TotalCost').innerText = `${cost} ₽`;
-        document.getElementById('step2PageCountCost').innerText = `${selectedPages} стр. × 3.00 ₽`;
-        
-        document.getElementById('step3CostBig').innerText = `${cost} ₽`;
-        updateSelectedCampus(selectedTerminalId);
+        setTimeout(() => {
+          bar.style.width = '100%';
+          statusText.innerText = '✓ ГОСТ 7.32 успешно подтвержден!';
+        }, 1200);
 
-        goToStep(2);
-      }, 1800);
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          bar.style.width = '0%';
+          showStep2();
+        }, 1500);
+      } else {
+        if (title) title.innerText = 'Подготовка к обычной печати...';
+        if (subtitle) subtitle.innerText = 'Проверка файла без изменения разметки';
+        bar.style.width = '35%';
+        statusText.innerText = 'Анализ структуры документа...';
+
+        setTimeout(() => {
+          bar.style.width = '80%';
+          statusText.innerText = 'Оригинальная разметка сохранена (без ГОСТ)...';
+        }, 300);
+
+        setTimeout(() => {
+          bar.style.width = '100%';
+          statusText.innerText = '✓ Документ готов к обычной печати!';
+        }, 600);
+
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          bar.style.width = '0%';
+          showStep2();
+        }, 850);
+      }
+    }
+
+    function showStep2() {
+      const cost = (selectedPages * 3.0).toFixed(2);
+      document.getElementById('step2FileName').innerText = selectedFile;
+      document.getElementById('step2PageCount').innerText = `${selectedPages} страниц`;
+      document.getElementById('step2TotalCost').innerText = `${cost} ₽`;
+      document.getElementById('step2PageCountCost').innerText = `${selectedPages} стр. × 3.00 ₽`;
+      
+      document.getElementById('step3CostBig').innerText = `${cost} ₽`;
+      setGostMode(isGostMode);
+      updateSelectedCampus(selectedTerminalId);
+
+      goToStep(2);
     }
 
     function goToStep(step) {
@@ -1248,28 +1670,35 @@
         const screen = document.getElementById(`stepScreen-${s}`);
         const dot = document.getElementById(`stepDot-${s}`);
         if (s === step) {
-          screen.classList.remove('hidden');
-          dot.className = 'flex items-center space-x-1 font-bold text-amber-400';
-          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-[9px]';
+          if (screen) screen.classList.remove('hidden');
+          if (dot) {
+            dot.className = 'flex items-center space-x-3 p-2.5 rounded-xl border-2 border-stankin-navy bg-blue-50/70 transition-all shadow-xs';
+            dot.querySelector('div:first-child').className = 'w-8 h-8 rounded-xl bg-stankin-navy text-white flex items-center justify-center font-extrabold text-xs shadow-sm';
+          }
         } else if (s < step) {
-          screen.classList.add('hidden');
-          dot.className = 'flex items-center space-x-1 font-semibold text-emerald-400';
-          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px]';
+          if (screen) screen.classList.add('hidden');
+          if (dot) {
+            dot.className = 'flex items-center space-x-3 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 transition-all';
+            dot.querySelector('div:first-child').className = 'w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs';
+          }
         } else {
-          screen.classList.add('hidden');
-          dot.className = 'flex items-center space-x-1 text-slate-400 font-medium';
-          dot.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px]';
+          if (screen) screen.classList.add('hidden');
+          if (dot) {
+            dot.className = 'flex items-center space-x-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition-all';
+            dot.querySelector('div:first-child').className = 'w-8 h-8 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs';
+          }
         }
       });
 
-      if (step === 2) checkSelectedTerminalAvailability();
+      checkSelectedTerminalAvailability();
     }
 
     function updateSelectedCampus(id) {
       selectedTerminalId = id;
       const termName = id === 1 ? 'Старый корпус (Терминал №1)' : 'Новый корпус (Терминал №2)';
       const summary = document.getElementById('step3OrderSummary');
-      if (summary) summary.innerText = `${selectedPages} страниц • ${termName}`;
+      const gostLabel = isGostMode ? 'ГОСТ 7.32' : 'Без ГОСТ';
+      if (summary) summary.innerText = `${termName} (${gostLabel})`;
       checkSelectedTerminalAvailability();
     }
 
@@ -1298,7 +1727,8 @@
             file_name: selectedFile,
             page_count: selectedPages,
             price_rub: cost,
-            payment_method: method
+            payment_method: method,
+            is_gost: isGostMode
           })
         });
 
