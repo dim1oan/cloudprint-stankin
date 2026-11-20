@@ -1,8 +1,12 @@
+import html
 import io
 import os
 import qrcode
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, BufferedInputFile
+from aiogram.types import (
+    Message, CallbackQuery, BufferedInputFile,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from pypdf import PdfReader
@@ -46,16 +50,17 @@ async def start_print_wizard(message: Message, state: FSMContext):
     )
 
     text = (
-        "📄 **Шаг 1 из 4: Загрузка документа для печати**\n\n"
+        "📄 <b>Шаг 1 из 4: Загрузка документа для печати</b>\n\n"
         "Вы можете:\n"
-        "1. **Отправить свой файл (PDF или DOCX)** прямо в этот чат Telegram 📎\n"
+        "1. <b>Отправить свой файл (PDF или DOCX)</b> прямо в этот чат Telegram 📎\n"
         "2. Или выбрать один из готовых образцов студенческих работ ниже 👇"
     )
-    await message.answer(text, reply_markup=get_file_choice_keyboard(), parse_mode="Markdown")
+    await message.answer(text, reply_markup=get_file_choice_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "sample_file_1")
 async def handle_sample_1(callback: CallbackQuery, state: FSMContext):
     """Выбор образца: Курсовой проект (20 стр.)."""
+    await callback.answer("Выбран: Курсовой проект (20 стр.)")
     await state.update_data(
         file_name="Курсовой_проект_Детали_машин.pdf",
         page_count=20
@@ -65,6 +70,7 @@ async def handle_sample_1(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "sample_file_2")
 async def handle_sample_2(callback: CallbackQuery, state: FSMContext):
     """Выбор образца: Дипломный проект (45 стр.)."""
+    await callback.answer("Выбран: Дипломный проект (45 стр.)")
     await state.update_data(
         file_name="Дипломный_проект_ВКР_СТАНКИН.pdf",
         page_count=45
@@ -73,7 +79,33 @@ async def handle_sample_2(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "await_upload_hint")
 async def handle_upload_hint(callback: CallbackQuery):
-    await callback.answer("Прикрепите и отправьте PDF или DOCX файл в чат как документ!", show_alert=True)
+    """Подсказка по загрузке своего файла."""
+    await callback.answer()
+    text = (
+        "📤 <b>Как отправить свой файл для печати:</b>\n\n"
+        "1. Нажмите на значок скрепки 📎 рядом с полем ввода сообщения.\n"
+        "2. Выберите файл в формате <b>PDF</b> или <b>DOCX</b>.\n"
+        "3. Отправьте его в этот чат как <b>Файл / Документ</b>.\n\n"
+        "<i>Бот автоматически определит число страниц и запустит префлайт ГОСТ 7.32!</i>"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="◀️ Назад к выбору образцов", callback_data="back_to_samples")],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_wizard")]
+    ])
+    await callback.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
+
+@router.callback_query(F.data == "back_to_samples")
+async def handle_back_to_samples(callback: CallbackQuery, state: FSMContext):
+    """Возврат к экрану выбора образца."""
+    await callback.answer()
+    await state.set_state(PrintWizard.choosing_file)
+    text = (
+        "📄 <b>Шаг 1 из 4: Загрузка документа для печати</b>\n\n"
+        "Вы можете:\n"
+        "1. <b>Отправить свой файл (PDF или DOCX)</b> прямо в этот чат Telegram 📎\n"
+        "2. Или выбрать один из готовых образцов студенческих работ ниже 👇"
+    )
+    await callback.message.edit_text(text, reply_markup=get_file_choice_keyboard(), parse_mode="HTML")
 
 @router.message(PrintWizard.choosing_file, F.document)
 async def handle_file_upload(message: Message, state: FSMContext):
@@ -103,10 +135,10 @@ async def handle_file_upload(message: Message, state: FSMContext):
     )
 
     await message.answer(
-        f"✅ **Файл успешно принят!**\n"
-        f"📄 `{file_name}`\n"
-        f"📑 Распознано страниц: **{pages} стр. (А4)**",
-        parse_mode="Markdown"
+        f"✅ <b>Файл успешно принят!</b>\n"
+        f"📄 <code>{html.escape(file_name)}</code>\n"
+        f"📑 Распознано страниц: <b>{pages} стр. (А4)</b>",
+        parse_mode="HTML"
     )
 
     data = await state.get_data()
@@ -114,27 +146,27 @@ async def handle_file_upload(message: Message, state: FSMContext):
     await state.set_state(PrintWizard.choosing_gost)
 
     text = (
-        f"📐 **Режим оформления студенческой работы:**\n\n"
-        f"• **ГОСТ 7.32 (СТАНКИН)**: автоматический префлайт полей (20-10-10-30 мм), шрифтов Times New Roman 14 pt, нумерации и рамок.\n"
-        f"• **Обычная печать**: без изменения оригинальной разметки документа."
+        "📐 <b>Режим оформления студенческой работы:</b>\n\n"
+        "• <b>ГОСТ 7.32 (СТАНКИН)</b>: автоматический префлайт полей (20-10-10-30 мм), шрифтов Times New Roman 14 pt, нумерации и рамок.\n"
+        "• <b>Обычная печать</b>: без изменения оригинальной разметки документа."
     )
-    await message.answer(text, reply_markup=get_gost_mode_keyboard(is_gost), parse_mode="Markdown")
+    await message.answer(text, reply_markup=get_gost_mode_keyboard(is_gost), parse_mode="HTML")
 
 async def step_to_gost_screen(callback: CallbackQuery, state: FSMContext):
     """Экран выбора режима ГОСТ."""
     await state.set_state(PrintWizard.choosing_gost)
     data = await state.get_data()
-    file_name = data.get("file_name", "Курсовой_проект_Детали_машин.pdf")
+    file_name = html.escape(data.get("file_name", "Курсовой_проект_Детали_машин.pdf"))
     pages = data.get("page_count", 20)
     is_gost = data.get("is_gost", True)
 
     text = (
-        f"📄 Выбран документ: **{file_name}** ({pages} стр.)\n\n"
-        f"📐 **Выберите режим оформления работы:**\n"
-        f"• **ГОСТ 7.32 (СТАНКИН)**: проверка полей (20-10-10-30 мм), шрифтов Times New Roman 14 pt и рамок.\n"
-        f"• **Обычная печать**: печать в оригинальном виде."
+        f"📄 Выбран документ: <b>{file_name}</b> ({pages} стр.)\n\n"
+        f"📐 <b>Выберите режим оформления работы:</b>\n"
+        f"• <b>ГОСТ 7.32 (СТАНКИН)</b>: проверка полей (20-10-10-30 мм), шрифтов Times New Roman 14 pt и рамок.\n"
+        f"• <b>Обычная печать</b>: печать в оригинальном виде."
     )
-    await callback.message.edit_text(text, reply_markup=get_gost_mode_keyboard(is_gost), parse_mode="Markdown")
+    await callback.message.edit_text(text, reply_markup=get_gost_mode_keyboard(is_gost), parse_mode="HTML")
 
 @router.callback_query(F.data == "set_gost_true")
 async def handle_gost_true(callback: CallbackQuery, state: FSMContext):
@@ -151,6 +183,7 @@ async def handle_gost_false(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "step_to_options")
 async def handle_step_to_options(callback: CallbackQuery, state: FSMContext):
     """Переход к параметрам цветности и сшития."""
+    await callback.answer()
     await state.set_state(PrintWizard.choosing_options)
     data = await state.get_data()
     is_gost = data.get("is_gost", True)
@@ -159,7 +192,7 @@ async def handle_step_to_options(callback: CallbackQuery, state: FSMContext):
     pages = data.get("page_count", 20)
 
     preflight_note = (
-        "🔍 *Префлайт ГОСТ 7.32 успешно подтвержден: поля 20-10-10-30 мм и шрифты TNR 14pt соответствуют регламенту СТАНКИН!*\n\n"
+        "🔍 <i>Префлайт ГОСТ 7.32 успешно подтвержден: поля 20-10-10-30 мм и шрифты TNR 14pt соответствуют регламенту СТАНКИН!</i>\n\n"
         if is_gost else ""
     )
 
@@ -167,13 +200,13 @@ async def handle_step_to_options(callback: CallbackQuery, state: FSMContext):
 
     text = (
         f"{preflight_note}"
-        f"⚙️ **Шаг 2 из 4: Параметры печати и скрепления**\n\n"
-        f"• **Цветность:** {'🎨 Цветная (10 ₽/стр)' if is_color else '⚫ Черно-белая (5 ₽/стр)'}\n"
-        f"• **Сшитие степлером:** {'📎 Включено (+15 ₽)' if stapling else '🚫 Без сшития (0 ₽)'}\n"
-        f"• **Текущая стоимость:** `{current_price:.2f} ₽` ({pages} стр.)\n\n"
+        f"⚙️ <b>Шаг 2 из 4: Параметры печати и скрепления</b>\n\n"
+        f"• <b>Цветность:</b> {'🎨 Цветная (10 ₽/стр)' if is_color else '⚫ Черно-белая (5 ₽/стр)'}\n"
+        f"• <b>Сшитие степлером:</b> {'📎 Включено (+15 ₽)' if stapling else '🚫 Без сшития (0 ₽)'}\n"
+        f"• <b>Текущая стоимость:</b> <code>{current_price:.2f} ₽</code> ({pages} стр.)\n\n"
         f"Настройте параметры кнопками ниже 👇"
     )
-    await callback.message.edit_text(text, reply_markup=get_options_keyboard(is_color, stapling), parse_mode="Markdown")
+    await callback.message.edit_text(text, reply_markup=get_options_keyboard(is_color, stapling), parse_mode="HTML")
 
 @router.callback_query(F.data == "opt_color_true")
 async def handle_opt_color_true(callback: CallbackQuery, state: FSMContext):
@@ -196,37 +229,40 @@ async def handle_opt_toggle_stapling(callback: CallbackQuery, state: FSMContext)
     await update_options_message(callback, state, data)
 
 async def update_options_message(callback: CallbackQuery, state: FSMContext, data: dict):
+    await callback.answer()
     is_color = data.get("is_color", True)
     stapling = data.get("stapling", False)
     pages = data.get("page_count", 20)
     current_price = calculate_order_price(pages, is_color, stapling)
 
     text = (
-        f"⚙️ **Шаг 2 из 4: Параметры печати и скрепления**\n\n"
-        f"• **Цветность:** {'🎨 Цветная (10 ₽/стр)' if is_color else '⚫ Черно-белая (5 ₽/стр)'}\n"
-        f"• **Сшитие степлером:** {'📎 Включено (+15 ₽)' if stapling else '🚫 Без сшития (0 ₽)'}\n"
-        f"• **Текущая стоимость:** `{current_price:.2f} ₽` ({pages} стр.)\n\n"
+        f"⚙️ <b>Шаг 2 из 4: Параметры печати и скрепления</b>\n\n"
+        f"• <b>Цветность:</b> {'🎨 Цветная (10 ₽/стр)' if is_color else '⚫ Черно-белая (5 ₽/стр)'}\n"
+        f"• <b>Сшитие степлером:</b> {'📎 Включено (+15 ₽)' if stapling else '🚫 Без сшития (0 ₽)'}\n"
+        f"• <b>Текущая стоимость:</b> <code>{current_price:.2f} ₽</code> ({pages} стр.)\n\n"
         f"Настройте параметры кнопками ниже 👇"
     )
-    await callback.message.edit_text(text, reply_markup=get_options_keyboard(is_color, stapling), parse_mode="Markdown")
+    await callback.message.edit_text(text, reply_markup=get_options_keyboard(is_color, stapling), parse_mode="HTML")
 
 @router.callback_query(F.data == "step_back_to_gost")
 async def handle_step_back_to_gost(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
     await step_to_gost_screen(callback, state)
 
 @router.callback_query(F.data == "step_to_terminals")
 @router.callback_query(F.data == "step_back_to_terminals")
 async def handle_step_to_terminals(callback: CallbackQuery, state: FSMContext):
     """Выбор терминала выдачи распечатки (Шаг 3)."""
+    await callback.answer()
     await state.set_state(PrintWizard.choosing_terminal)
     terms = database.get_terminals_list()
 
     text = (
-        "📍 **Шаг 3 из 4: Выберите терминал выдачи распечатки**\n\n"
+        "📍 <b>Шаг 3 из 4: Выберите терминал выдачи распечатки</b>\n\n"
         "Задание будет отправлено в очередь печати выбранного МФУ.\n"
         "⚠️ Если на МФУ зафиксирован аппаратный сбой (например, Замятие E-04), печать блокируется во избежание списания средств!"
     )
-    await callback.message.edit_text(text, reply_markup=get_terminals_keyboard(terms), parse_mode="Markdown")
+    await callback.message.edit_text(text, reply_markup=get_terminals_keyboard(terms), parse_mode="HTML")
 
 @router.callback_query(F.data.startswith("select_term_"))
 async def handle_select_terminal(callback: CallbackQuery, state: FSMContext):
@@ -250,11 +286,12 @@ async def handle_select_terminal(callback: CallbackQuery, state: FSMContext):
         await callback.answer(alert_msg, show_alert=True)
         return
 
+    await callback.answer(f"Выбран: {term['name']}")
     await state.update_data(terminal_id=term_id)
     await state.set_state(PrintWizard.choosing_payment)
 
     data = await state.get_data()
-    file_name = data.get("file_name", "Курсовой_проект.pdf")
+    file_name = html.escape(data.get("file_name", "Курсовой_проект.pdf"))
     pages = data.get("page_count", 20)
     is_gost = data.get("is_gost", True)
     is_color = data.get("is_color", True)
@@ -265,36 +302,39 @@ async def handle_select_terminal(callback: CallbackQuery, state: FSMContext):
     user_balance = user["balance_rub"] if user else 150.0
 
     color_title = "Цветная (10.00 ₽/стр)" if is_color else "Черно-белая (5.00 ₽/стр)"
-    staple_line = f"• 📎 Сшитие степлером: `+15.00 ₽`\n" if stapling else ""
+    staple_line = f"• 📎 Сшитие степлером: <code>+15.00 ₽</code>\n" if stapling else ""
 
     text = (
-        f"🧾 **Шаг 4 из 4: Детализация заказа и оплата**\n"
+        f"🧾 <b>Шаг 4 из 4: Детализация заказа и оплата</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"• 📄 Документ: **{file_name}**\n"
-        f"• 📑 Объем: **{pages} стр. (А4)**\n"
-        f"• 📐 Стандарт: `{'ГОСТ 7.32 (СТАНКИН)' if is_gost else 'Обычная печать'}`\n"
-        f"• 🎨 Цветность: `{color_title}`\n"
+        f"• 📄 Документ: <b>{file_name}</b>\n"
+        f"• 📑 Объем: <b>{pages} стр. (А4)</b>\n"
+        f"• 📐 Стандарт: <code>{'ГОСТ 7.32 (СТАНКИН)' if is_gost else 'Обычная печать'}</code>\n"
+        f"• 🎨 Цветность: <code>{color_title}</code>\n"
         f"{staple_line}"
-        f"• 📍 Пункт выдачи: **{term['name']}**\n"
-        f"  ({term['location']})\n"
+        f"• 📍 Пункт выдачи: <b>{html.escape(term['name'])}</b>\n"
+        f"  ({html.escape(term['location'])})\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"💵 **ИТОГО К ОПЛАТЕ:** `{total_price:.2f} ₽`\n"
-        f"🪙 Ваш бонусный баланс: `{user_balance:.2f} ₽`\n\n"
+        f"💵 <b>ИТОГО К ОПЛАТЕ:</b> <code>{total_price:.2f} ₽</code>\n"
+        f"🪙 Ваш бонусный баланс: <code>{user_balance:.2f} ₽</code>\n\n"
         f"Выберите удобный способ оплаты:"
     )
-    await callback.message.edit_text(text, reply_markup=get_payment_keyboard(total_price, user_balance), parse_mode="Markdown")
+    await callback.message.edit_text(text, reply_markup=get_payment_keyboard(total_price, user_balance), parse_mode="HTML")
 
 @router.callback_query(F.data == "step_back_to_options")
 async def handle_step_back_to_options(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
     data = await state.get_data()
     await update_options_message(callback, state, data)
 
 @router.callback_query(F.data == "pay_bonus")
 async def handle_pay_bonus(callback: CallbackQuery, state: FSMContext):
+    await callback.answer("Обработка списания бонусов...")
     await process_payment(callback, state, payment_method="bonus")
 
 @router.callback_query(F.data == "pay_sbp")
 async def handle_pay_sbp(callback: CallbackQuery, state: FSMContext):
+    await callback.answer("Генерация платежа СБП...")
     await process_payment(callback, state, payment_method="sbp")
 
 async def process_payment(callback: CallbackQuery, state: FSMContext, payment_method: str):
@@ -350,17 +390,23 @@ async def process_payment(callback: CallbackQuery, state: FSMContext, payment_me
     photo = BufferedInputFile(img_bytes.read(), filename="pickup_qr.png")
 
     caption = (
-        f"🎉 **Заказ успешно оплачен и отправлен в печать!**\n\n"
-        f"🔑 **ВАШ КОД ПОЛУЧЕНИЯ:** 【 `{pickup_code}` 】\n"
-        f"📦 Номер заказа: `{order_code}`\n"
-        f"📍 Терминал: **{term_name}**\n"
-        f"📌 Адрес: {location}\n"
-        f"💰 Оплачено: `{total_price:.2f} ₽` ({'Бонусами' if payment_method == 'bonus' else 'СБП'})\n\n"
+        f"🎉 <b>Заказ успешно оплачен и отправлен в печать!</b>\n\n"
+        f"🔑 <b>ВАШ КОД ПОЛУЧЕНИЯ:</b> 【 <code>{pickup_code}</code> 】\n"
+        f"📦 Номер заказа: <code>{order_code}</code>\n"
+        f"📍 Терминал: <b>{html.escape(term_name)}</b>\n"
+        f"📌 Адрес: {html.escape(location)}\n"
+        f"💰 Оплачено: <code>{total_price:.2f} ₽</code> ({'Бонусами' if payment_method == 'bonus' else 'СБП'})\n\n"
         f"ℹ️ Введите код на клавиатуре МФУ или отсканируйте QR-код сканером терминала."
     )
-    await callback.message.answer_photo(photo=photo, caption=caption, parse_mode="Markdown", reply_markup=get_main_menu_keyboard())
+    await callback.message.answer_photo(photo=photo, caption=caption, parse_mode="HTML", reply_markup=get_main_menu_keyboard())
 
 @router.callback_query(F.data == "cancel_wizard")
 async def handle_cancel_wizard(callback: CallbackQuery, state: FSMContext):
+    """Отмена оформления заказа."""
     await state.clear()
-    await callback.message.edit_text("❌ Оформление печати отменено.")
+    await callback.answer("Оформление печати отменено")
+    text = (
+        "❌ <b>Оформление печати отменено.</b>\n\n"
+        "Вы можете начать заново в любой момент, нажав кнопку «🖨 Оформить печать» в меню ниже 👇"
+    )
+    await callback.message.edit_text(text, parse_mode="HTML")
